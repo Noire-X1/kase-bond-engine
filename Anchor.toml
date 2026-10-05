@@ -1,0 +1,21 @@
+skip_local_validator = true
+
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+bond_core = "GsYLz1ieJSo267DW3oga1k4hAmVoqTHgKaEw2K5HxJPT"
+corporate_actions = "59hoGMNeum386CpHQpbsUStq51vfXS9iYxPkq5apthNg"
+governance = "D4Zh5HNxQwuzqFJFsw5BFNBfkAGtW7Efk5VRTnFNwEqg"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]
