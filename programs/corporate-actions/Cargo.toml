@@ -14,15 +14,15 @@ default = []
 cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "bond-core/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []
 
-
 [dependencies]
 anchor-lang = "1.2.0"
-
+anchor-spl = "1.2.0"
+bond-core = { path = "../bond-core", features = ["cpi"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

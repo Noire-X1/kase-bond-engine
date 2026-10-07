@@ -1,25 +1,12 @@
-pub mod constants;
-pub mod error;
-pub mod instructions;
-pub mod state;
-
 use anchor_lang::prelude::*;
 
-pub use constants::*;
-pub use instructions::*;
-pub use state::*;
+// Compile probe: proves the bond-core dependency (cpi feature) resolves.
+#[allow(unused_imports)]
+use bond_core::state::{BondState, HolderRecord, SnapshotRecord};
 
 declare_id!("59hoGMNeum386CpHQpbsUStq51vfXS9iYxPkq5apthNg");
 
 #[program]
 pub mod corporate_actions {
     use super::*;
-
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        crate::instructions::initialize::handle_initialize(ctx)
-    }
-
-    pub fn increment(ctx: Context<Increment>) -> Result<()> {
-        crate::instructions::increment::handle_increment(ctx)
-    }
 }
