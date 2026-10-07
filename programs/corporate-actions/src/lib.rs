@@ -20,4 +20,8 @@ pub mod corporate_actions {
     pub fn create_coupon_action(ctx: Context<CreateCouponAction>, epoch: u32) -> Result<()> {
         instructions::create_coupon_action::handle_create_coupon_action(ctx, epoch)
     }
+
+    pub fn calculate_entitlement(ctx: Context<CalculateEntitlement>) -> Result<()> {
+        instructions::calculate_entitlement::handle_calculate_entitlement(ctx)
+    }
 }
