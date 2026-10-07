@@ -24,4 +24,8 @@ pub mod corporate_actions {
     pub fn calculate_entitlement(ctx: Context<CalculateEntitlement>) -> Result<()> {
         instructions::calculate_entitlement::handle_calculate_entitlement(ctx)
     }
+
+    pub fn fund_action(ctx: Context<FundAction>) -> Result<()> {
+        instructions::fund_action::handle_fund_action(ctx)
+    }
 }
