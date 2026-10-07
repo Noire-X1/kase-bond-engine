@@ -18,4 +18,28 @@ pub enum BondError {
     MathOverflow,
     #[msg("Coupon periods must be greater than zero")]
     ZeroPeriods,
+    #[msg("Only the bond issuer can do this")]
+    Unauthorized,
+    #[msg("Account belongs to a different bond")]
+    WrongBond,
+    #[msg("Wrong bond mint")]
+    WrongMint,
+    #[msg("Wrong token account for this holder")]
+    WrongTokenAccount,
+    #[msg("Bond is not active")]
+    BondNotActive,
+    #[msg("A record window is already open")]
+    WindowOpen,
+    #[msg("No record window is open")]
+    WindowNotOpen,
+    #[msg("Amount must be greater than zero")]
+    InvalidAmount,
+    #[msg("Minting would exceed max supply")]
+    MaxSupplyExceeded,
+    #[msg("Holder already snapshotted in this window")]
+    AlreadySnapshotted,
+    #[msg("Snapshot incomplete: snapshotted balances do not equal total supply")]
+    SnapshotIncomplete,
+    #[msg("Token account is not frozen")]
+    AccountNotFrozen,
 }

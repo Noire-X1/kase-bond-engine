@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 pub const BOND_SEED: &[u8] = b"bond";
 pub const MINT_SEED: &[u8] = b"bond_mint";
 pub const HOLDER_SEED: &[u8] = b"holder";
+pub const SNAPSHOT_SEED: &[u8] = b"snapshot";
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub enum BondStatus {
@@ -51,15 +52,34 @@ pub struct BondState {
     pub mint_bump: u8,
 }
 
+/// Holder registry: one record per (bond, wallet).
 #[account]
 #[derive(InitSpace)]
 pub struct HolderRecord {
     pub bond: Pubkey,
     pub wallet: Pubkey,
+    /// The one token account that holds this wallet's bonds for this bond.
+    pub token_account: Pubkey,
     pub jurisdiction: Jurisdiction,
     pub snapshot_balance: u64,
     pub snapshot_epoch: u32,
     pub snapshot_slot: u64,
     pub registered_ts: i64,
+    pub bump: u8,
+}
+
+/// Persistent audit record of one record-date window (one per epoch).
+#[account]
+#[derive(InitSpace)]
+pub struct SnapshotRecord {
+    pub bond: Pubkey,
+    pub epoch: u32,
+    pub opened_slot: u64,
+    pub opened_ts: i64,
+    pub closed: bool,
+    pub closed_slot: u64,
+    pub closed_ts: i64,
+    pub total_supply: u64,
+    pub holder_count: u32,
     pub bump: u8,
 }
