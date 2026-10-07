@@ -28,4 +28,8 @@ pub mod corporate_actions {
     pub fn fund_action(ctx: Context<FundAction>) -> Result<()> {
         instructions::fund_action::handle_fund_action(ctx)
     }
+
+    pub fn claim_coupon(ctx: Context<ClaimCoupon>) -> Result<()> {
+        instructions::claim_coupon::handle_claim_coupon(ctx)
+    }
 }
