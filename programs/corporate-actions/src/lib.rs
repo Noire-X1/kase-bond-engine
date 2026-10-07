@@ -16,4 +16,8 @@ pub mod corporate_actions {
     pub fn initialize_ledger(ctx: Context<InitializeLedger>, total_coupons: u16) -> Result<()> {
         instructions::initialize_ledger::handle_initialize_ledger(ctx, total_coupons)
     }
+
+    pub fn create_coupon_action(ctx: Context<CreateCouponAction>, epoch: u32) -> Result<()> {
+        instructions::create_coupon_action::handle_create_coupon_action(ctx, epoch)
+    }
 }
