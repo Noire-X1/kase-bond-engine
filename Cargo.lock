@@ -919,6 +919,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bond-core",
+ "governance",
  "litesvm",
  "litesvm-token",
  "solana-clock 3.2.1",
@@ -1441,6 +1442,7 @@ name = "governance"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "bond-core",
 ]
 
 [[package]]

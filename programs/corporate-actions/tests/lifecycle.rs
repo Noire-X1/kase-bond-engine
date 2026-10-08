@@ -1454,3 +1454,320 @@ fn full_lifecycle_coupon_then_redemption() {
     send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
     assert!(read_bond(&f.svm, &f.bond).status == BondStatus::Redeemed);
 }
+
+// ===================================================== B6: governance
+
+use governance::state::{
+    Proposal, ProposalStatus, VoteChoice, VoteRecord, PROPOSAL_SEED, VOTE_SEED,
+};
+
+const GOVERNANCE_SO: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../target/litesvm/governance.so"
+);
+/// Base clock for governance tests (maturity is 2_000_000_000, so bonds stay active).
+const T0: i64 = 1_000_000_000;
+
+fn gov_fixture() -> Fixture {
+    let mut f = fixture();
+    f.svm
+        .add_program_from_file(governance::ID, GOVERNANCE_SO)
+        .unwrap();
+    f
+}
+
+/// Voters pay the rent of their own vote record, so they need a little SOL.
+fn fund_wallet(f: &mut Fixture, h: &Holder) {
+    f.svm.airdrop(&h.wallet.pubkey(), 1_000_000_000).unwrap();
+}
+
+fn proposal_pda(bond: &Pubkey, id: u32) -> Pubkey {
+    Pubkey::find_program_address(
+        &[PROPOSAL_SEED, bond.as_ref(), &id.to_le_bytes()],
+        &governance::ID,
+    )
+    .0
+}
+
+fn vote_pda(proposal: &Pubkey, wallet: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[VOTE_SEED, proposal.as_ref(), wallet.as_ref()],
+        &governance::ID,
+    )
+    .0
+}
+
+fn read_proposal(svm: &LiteSVM, key: &Pubkey) -> Proposal {
+    Proposal::try_deserialize(&mut account_data(svm, key).as_slice()).unwrap()
+}
+
+fn read_vote(svm: &LiteSVM, key: &Pubkey) -> VoteRecord {
+    VoteRecord::try_deserialize(&mut account_data(svm, key).as_slice()).unwrap()
+}
+
+fn create_proposal_ix(
+    f: &Fixture,
+    id: u32,
+    epoch: u32,
+    start_ts: i64,
+    end_ts: i64,
+    quorum_bps: u16,
+) -> Instruction {
+    Instruction {
+        program_id: governance::ID,
+        accounts: governance::accounts::CreateProposal {
+            issuer: pk(&f.issuer),
+            bond: f.bond,
+            snapshot_record: snapshot_pda(&f.bond, epoch),
+            proposal: proposal_pda(&f.bond, id),
+            system_program: anchor_lang::system_program::ID,
+        }
+        .to_account_metas(None),
+        data: governance::instruction::CreateProposal {
+            proposal_id: id,
+            title: "Approve covenant waiver".to_string(),
+            description: "One-time waiver of the leverage covenant.".to_string(),
+            start_ts,
+            end_ts,
+            quorum_bps,
+        }
+        .data(),
+    }
+}
+
+fn cast_vote_ix(f: &Fixture, h: &Holder, id: u32, choice: VoteChoice) -> Instruction {
+    let proposal = proposal_pda(&f.bond, id);
+    Instruction {
+        program_id: governance::ID,
+        accounts: governance::accounts::CastVote {
+            voter: pk(&h.wallet),
+            bond: f.bond,
+            proposal,
+            holder_record: h.record,
+            vote_record: vote_pda(&proposal, &pk(&h.wallet)),
+            system_program: anchor_lang::system_program::ID,
+        }
+        .to_account_metas(None),
+        data: governance::instruction::CastVote { choice }.data(),
+    }
+}
+
+fn finalize_ix(f: &Fixture, id: u32) -> Instruction {
+    Instruction {
+        program_id: governance::ID,
+        accounts: governance::accounts::FinalizeProposal {
+            cranker: pk(&f.issuer),
+            bond: f.bond,
+            proposal: proposal_pda(&f.bond, id),
+        }
+        .to_account_metas(None),
+        data: governance::instruction::FinalizeProposal {}.data(),
+    }
+}
+
+/// Four holders with 10, 5, 2 and 0 bonds (17 in circulation), record date 1,
+/// clock set to T0. The zero-balance holder is registered and snapshotted.
+fn prepare_governance() -> (Fixture, Vec<Holder>) {
+    let mut f = gov_fixture();
+    let mut holders = Vec::new();
+    for bonds in [10u64, 5, 2, 0] {
+        let h = add_holder(&mut f, Jurisdiction::Domestic);
+        if bonds > 0 {
+            let ix = mint_bonds_ix(&f, &h, bonds);
+            send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+        }
+        fund_wallet(&mut f, &h);
+        holders.push(h);
+    }
+    let refs: Vec<&Holder> = holders.iter().collect();
+    record_date(&mut f, 1, &refs);
+    warp_to_ts(&mut f.svm, T0);
+    (f, holders)
+}
+
+#[test]
+fn governance_weighted_vote_passes_and_result_is_final() {
+    let (mut f, hs) = prepare_governance();
+
+    let ix = create_proposal_ix(&f, 1, 1, T0, T0 + 3_600, 5_000); // 50% quorum
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let proposal = proposal_pda(&f.bond, 1);
+    let p = read_proposal(&f.svm, &proposal);
+    assert_eq!(p.epoch, 1);
+    assert_eq!(p.snapshot_total_supply, 17);
+    assert!(p.status == ProposalStatus::Open);
+
+    // Weights come from snapshot balances: 10 For, 5 Against, 2 Abstain.
+    let ix = cast_vote_ix(&f, &hs[0], 1, VoteChoice::For);
+    send_ok(&mut f.svm, &[ix], &hs[0].wallet, &[]);
+    let ix = cast_vote_ix(&f, &hs[1], 1, VoteChoice::Against);
+    send_ok(&mut f.svm, &[ix], &hs[1].wallet, &[]);
+    let ix = cast_vote_ix(&f, &hs[2], 1, VoteChoice::Abstain);
+    send_ok(&mut f.svm, &[ix], &hs[2].wallet, &[]);
+
+    let p = read_proposal(&f.svm, &proposal);
+    assert_eq!(
+        (p.votes_for, p.votes_against, p.votes_abstain, p.voter_count),
+        (10, 5, 2, 3)
+    );
+    let v = read_vote(&f.svm, &vote_pda(&proposal, &pk(&hs[0].wallet)));
+    assert_eq!(v.weight, 10);
+    assert!(v.choice == VoteChoice::For);
+
+    // Too early to finalize.
+    let ix = finalize_ix(&f, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("must refuse while voting is open");
+    assert!(
+        err.contains("VotingStillOpen"),
+        "expected VotingStillOpen, got:\n{err}"
+    );
+
+    // After the window: 17 of 17 turnout (>= 50%) and 10 > 5, so Passed.
+    warp_to_ts(&mut f.svm, T0 + 3_601);
+    let ix = finalize_ix(&f, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let p = read_proposal(&f.svm, &proposal);
+    assert!(p.status == ProposalStatus::Passed);
+    assert!(p.finalized_ts >= T0 + 3_601);
+
+    // The result is final.
+    let ix = finalize_ix(&f, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("second finalize must fail");
+    assert!(
+        err.contains("AlreadyFinalized"),
+        "expected AlreadyFinalized, got:\n{err}"
+    );
+}
+
+#[test]
+fn governance_vote_rules() {
+    let (mut f, hs) = prepare_governance();
+    let ix = create_proposal_ix(&f, 1, 1, T0, T0 + 3_600, 0);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = create_proposal_ix(&f, 2, 1, T0 + 1_000, T0 + 2_000, 0);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let proposal1 = proposal_pda(&f.bond, 1);
+
+    // One vote per holder: the second attempt fails (vote record already exists).
+    let ix = cast_vote_ix(&f, &hs[0], 1, VoteChoice::For);
+    send_ok(&mut f.svm, &[ix], &hs[0].wallet, &[]);
+    let ix = cast_vote_ix(&f, &hs[0], 1, VoteChoice::Against);
+    let err = send(&mut f.svm, &[ix], &hs[0].wallet, &[]).expect_err("double vote must fail");
+    assert!(
+        err.contains("already in use"),
+        "expected an already-in-use failure, got:\n{err}"
+    );
+    let p = read_proposal(&f.svm, &proposal1);
+    assert_eq!((p.votes_for, p.votes_against), (10, 0));
+
+    // Voting on proposal 2 has not started.
+    let ix = cast_vote_ix(&f, &hs[1], 2, VoteChoice::For);
+    let err = send(&mut f.svm, &[ix], &hs[1].wallet, &[]).expect_err("vote before start must fail");
+    assert!(
+        err.contains("VotingNotStarted"),
+        "expected VotingNotStarted, got:\n{err}"
+    );
+
+    // A registered holder with zero bonds has no voting power.
+    let ix = cast_vote_ix(&f, &hs[3], 1, VoteChoice::For);
+    let err = send(&mut f.svm, &[ix], &hs[3].wallet, &[]).expect_err("zero balance must fail");
+    assert!(
+        err.contains("NoVotingPower"),
+        "expected NoVotingPower, got:\n{err}"
+    );
+
+    // Nobody can borrow someone else's weight: the attacker signs with hs[1]'s record.
+    let attacker = Keypair::new();
+    f.svm.airdrop(&attacker.pubkey(), 10_000_000_000).unwrap();
+    let mut ix = with_signer(cast_vote_ix(&f, &hs[1], 1, VoteChoice::For), &attacker);
+    // accounts[4] is the vote record; derive it from the attacker so seeds are valid
+    // and the holder-record ownership check is what refuses.
+    ix.accounts[4].pubkey = vote_pda(&proposal1, &pk(&attacker));
+    let err = send(&mut f.svm, &[ix], &attacker, &[]).expect_err("borrowed weight must fail");
+    assert!(
+        err.contains("Unauthorized"),
+        "expected Unauthorized, got:\n{err}"
+    );
+
+    // After the end of proposal 1, voting is refused.
+    warp_to_ts(&mut f.svm, T0 + 3_601);
+    let ix = cast_vote_ix(&f, &hs[1], 1, VoteChoice::For);
+    let err = send(&mut f.svm, &[ix], &hs[1].wallet, &[]).expect_err("vote after end must fail");
+    assert!(
+        err.contains("VotingEnded"),
+        "expected VotingEnded, got:\n{err}"
+    );
+}
+
+#[test]
+fn governance_quorum_rejection_and_create_rules() {
+    let (mut f, hs) = prepare_governance();
+
+    // Create-time rules.
+    let attacker = Keypair::new();
+    f.svm.airdrop(&attacker.pubkey(), 10_000_000_000).unwrap();
+    let ix = with_signer(create_proposal_ix(&f, 9, 1, T0, T0 + 100, 0), &attacker);
+    let err = send(&mut f.svm, &[ix], &attacker, &[]).expect_err("non-issuer must be refused");
+    assert!(
+        err.contains("Unauthorized"),
+        "expected Unauthorized, got:\n{err}"
+    );
+    let ix = create_proposal_ix(&f, 9, 1, T0 + 100, T0 + 100, 0);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("empty window must be refused");
+    assert!(
+        err.contains("InvalidWindow"),
+        "expected InvalidWindow, got:\n{err}"
+    );
+    let ix = create_proposal_ix(&f, 9, 1, T0, T0 + 100, 10_001);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("quorum over 100% must be refused");
+    assert!(
+        err.contains("InvalidQuorum"),
+        "expected InvalidQuorum, got:\n{err}"
+    );
+
+    // Proposal 1 needs 60% turnout; only the 10-bond holder votes: 10/17 = 58.8%.
+    let ix = create_proposal_ix(&f, 1, 1, T0, T0 + 3_600, 6_000);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    // Proposal 2 has no quorum; 10 Against beats 5 For.
+    let ix = create_proposal_ix(&f, 2, 1, T0, T0 + 3_600, 0);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let ix = cast_vote_ix(&f, &hs[0], 1, VoteChoice::For);
+    send_ok(&mut f.svm, &[ix], &hs[0].wallet, &[]);
+    let ix = cast_vote_ix(&f, &hs[0], 2, VoteChoice::Against);
+    send_ok(&mut f.svm, &[ix], &hs[0].wallet, &[]);
+    let ix = cast_vote_ix(&f, &hs[1], 2, VoteChoice::For);
+    send_ok(&mut f.svm, &[ix], &hs[1].wallet, &[]);
+
+    warp_to_ts(&mut f.svm, T0 + 3_601);
+    let ix = finalize_ix(&f, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = finalize_ix(&f, 2);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    assert!(read_proposal(&f.svm, &proposal_pda(&f.bond, 1)).status == ProposalStatus::NoQuorum);
+    assert!(read_proposal(&f.svm, &proposal_pda(&f.bond, 2)).status == ProposalStatus::Rejected);
+}
+
+#[test]
+fn governance_vote_after_next_record_window_is_refused() {
+    let (mut f, hs) = prepare_governance();
+    let ix = create_proposal_ix(&f, 1, 1, T0, T0 + 3_600, 0);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = cast_vote_ix(&f, &hs[0], 1, VoteChoice::For);
+    send_ok(&mut f.svm, &[ix], &hs[0].wallet, &[]);
+
+    // The next record date overwrites every holder record with epoch 2.
+    let refs: Vec<&Holder> = hs.iter().collect();
+    record_date(&mut f, 2, &refs);
+
+    let ix = cast_vote_ix(&f, &hs[1], 1, VoteChoice::For);
+    let err = send(&mut f.svm, &[ix], &hs[1].wallet, &[]).expect_err("late vote must be refused");
+    assert!(
+        err.contains("StaleSnapshot"),
+        "expected StaleSnapshot, got:\n{err}"
+    );
+    // The vote cast before the new window is still counted.
+    let p = read_proposal(&f.svm, &proposal_pda(&f.bond, 1));
+    assert_eq!(p.votes_for, 10);
+}
