@@ -801,3 +801,331 @@ fn coupon_double_claim_rejected() {
     // The holder was paid exactly once.
     assert_eq!(token_state(&f.svm, &s.holder_payment).amount, 500);
 }
+
+// ================================================ B4: edge cases and sweep
+
+/// Like issue_bond_ix but with explicit withholding rates (bps) per jurisdiction.
+fn issue_bond_with_ix(
+    issuer: &Keypair,
+    payment_mint: Pubkey,
+    bond_id: u64,
+    face_value: u64,
+    withholding_bps_domestic: u16,
+    withholding_bps_foreign: u16,
+) -> (Instruction, Pubkey, Pubkey) {
+    let (bond, _) = Pubkey::find_program_address(
+        &[BOND_SEED, pk(issuer).as_ref(), &bond_id.to_le_bytes()],
+        &bond_core::ID,
+    );
+    let (bond_mint, _) =
+        Pubkey::find_program_address(&[MINT_SEED, bond.as_ref()], &bond_core::ID);
+
+    let params = IssueBondParams {
+        bond_id,
+        face_value,
+        coupon_rate_bps: 1_000,
+        coupons_per_year: 2,
+        maturity_ts: 2_000_000_000,
+        max_supply: 1_000,
+        withholding_bps_domestic,
+        withholding_bps_foreign,
+    };
+
+    let ix = Instruction {
+        program_id: bond_core::ID,
+        accounts: bond_core::accounts::IssueBond {
+            issuer: pk(issuer),
+            bond,
+            bond_mint,
+            payment_mint,
+            token_program: anchor_spl::token::ID,
+            system_program: anchor_lang::system_program::ID,
+        }
+        .to_account_metas(None),
+        data: bond_core::instruction::IssueBond { params }.data(),
+    };
+    (ix, bond, bond_mint)
+}
+
+fn fixture_with_withholding(domestic_bps: u16, foreign_bps: u16) -> Fixture {
+    let (mut svm, issuer) = setup();
+    let payment_mint = CreateMint::new(&mut svm, &issuer)
+        .decimals(6)
+        .send()
+        .unwrap();
+    let payment_mint = Pubkey::new_from_array(payment_mint.to_bytes());
+    let (ix, bond, bond_mint) =
+        issue_bond_with_ix(&issuer, payment_mint, 1, 1_000, domestic_bps, foreign_bps);
+    send_ok(&mut svm, &[ix], &issuer, &[]);
+    Fixture {
+        svm,
+        issuer,
+        payment_mint,
+        bond,
+        bond_mint,
+    }
+}
+
+/// Replaces the first account (the issuer signer) of an instruction.
+fn with_signer(mut ix: Instruction, signer: &Keypair) -> Instruction {
+    ix.accounts[0].pubkey = pk(signer);
+    ix
+}
+
+fn sweep_ix(f: &Fixture, env: &CouponEnv, epoch: u32) -> Instruction {
+    let action = action_pda(&f.bond, epoch);
+    Instruction {
+        program_id: corporate_actions::ID,
+        accounts: corporate_actions::accounts::SweepWithholding {
+            issuer: pk(&f.issuer),
+            bond: f.bond,
+            action,
+            payment_mint: f.payment_mint,
+            vault: vault_pda(&action),
+            tax_collector: env.tax_collector,
+            token_program: anchor_spl::token::ID,
+        }
+        .to_account_metas(None),
+        data: corporate_actions::instruction::SweepWithholding {}.data(),
+    }
+}
+
+/// Registers holders (jurisdiction, bonds), mints, runs record date 1 and creates
+/// the coupon action for epoch 1. Calculation is left to the test.
+/// Returns (holders, their payment accounts, coupon env).
+fn prepare_multi(
+    f: &mut Fixture,
+    specs: &[(Jurisdiction, u64)],
+    total_coupons: u16,
+) -> (Vec<Holder>, Vec<Pubkey>, CouponEnv) {
+    let mut holders = Vec::new();
+    for (j, bonds) in specs {
+        let h = add_holder(f, *j);
+        if *bonds > 0 {
+            let ix = mint_bonds_ix(f, &h, *bonds);
+            send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+        }
+        holders.push(h);
+    }
+    let env = coupon_env(f, total_coupons);
+    let pays: Vec<Pubkey> = holders
+        .iter()
+        .map(|h| payment_account_for(f, &h.wallet))
+        .collect();
+
+    let refs: Vec<&Holder> = holders.iter().collect();
+    record_date(f, 1, &refs);
+
+    let ix = create_coupon_action_ix(f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    (holders, pays, env)
+}
+
+#[test]
+fn withholding_split_and_sweep() {
+    // Foreign holders: 15% withholding on the coupon. Domestic: 0%.
+    let mut f = fixture_with_withholding(0, 1_500);
+    let (holders, pays, env) = prepare_multi(
+        &mut f,
+        &[(Jurisdiction::Domestic, 10), (Jurisdiction::Foreign, 10)],
+        3,
+    );
+    for h in &holders {
+        let ix = calculate_ix(&f, h, 1);
+        send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    }
+    let action = action_pda(&f.bond, 1);
+
+    let dom = read_entitlement(&f.svm, &entitlement_pda(&action, &pk(&holders[0].wallet)));
+    assert_eq!((dom.gross, dom.withheld, dom.net), (500, 0, 500));
+
+    let foreign = read_entitlement(&f.svm, &entitlement_pda(&action, &pk(&holders[1].wallet)));
+    assert_eq!(foreign.withholding_bps, 1_500);
+    assert_eq!((foreign.gross, foreign.withheld, foreign.net), (500, 75, 425));
+    assert_eq!(foreign.gross, foreign.withheld + foreign.net);
+
+    let a = read_action(&f.svm, &action);
+    assert_eq!(a.entitlement_count, 2);
+    assert_eq!(a.total_gross, 1_000);
+    assert_eq!(a.total_withheld, 75);
+    assert_eq!(a.total_net, 925);
+
+    // Funding covers gross (net + withheld).
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 1_000);
+
+    // Sweep sends exactly the withheld amount to the (simulated) tax collector.
+    let ix = sweep_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert_eq!(token_state(&f.svm, &env.tax_collector).amount, 75);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 925);
+    assert!(read_action(&f.svm, &action).withheld_swept);
+
+    // A second sweep is refused.
+    let ix = sweep_ix(&f, &env, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("second sweep must fail");
+    assert!(
+        err.contains("AlreadySwept"),
+        "expected AlreadySwept, got:\n{err}"
+    );
+
+    // Both holders can still claim their net amounts; the vault ends empty.
+    let ix = claim_ix(&f, &holders[0], &pays[0], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[&holders[0].wallet]);
+    let ix = claim_ix(&f, &holders[1], &pays[1], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[&holders[1].wallet]);
+    assert_eq!(token_state(&f.svm, &pays[0]).amount, 500);
+    assert_eq!(token_state(&f.svm, &pays[1]).amount, 425);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 0);
+}
+
+#[test]
+fn sweep_rejected_before_funding_and_when_nothing_withheld() {
+    let mut f = fixture(); // default withholding 0%
+    let (holders, _pays, env) =
+        prepare_multi(&mut f, &[(Jurisdiction::Domestic, 10)], 3);
+    let ix = calculate_ix(&f, &holders[0], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let ix = sweep_ix(&f, &env, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("sweep before funding must fail");
+    assert!(err.contains("NotFunded"), "expected NotFunded, got:\n{err}");
+
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let ix = sweep_ix(&f, &env, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("nothing to sweep must fail");
+    assert!(
+        err.contains("NothingToSweep"),
+        "expected NothingToSweep, got:\n{err}"
+    );
+}
+
+#[test]
+fn zero_balance_holder_gets_zero_entitlement() {
+    let mut f = fixture();
+    let (holders, pays, env) = prepare_multi(
+        &mut f,
+        &[(Jurisdiction::Domestic, 10), (Jurisdiction::Domestic, 0)],
+        3,
+    );
+    for h in &holders {
+        let ix = calculate_ix(&f, h, 1);
+        send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    }
+    let action = action_pda(&f.bond, 1);
+
+    let zero = read_entitlement(&f.svm, &entitlement_pda(&action, &pk(&holders[1].wallet)));
+    assert_eq!((zero.quantity, zero.gross, zero.net), (0, 0, 0));
+
+    let a = read_action(&f.svm, &action);
+    assert_eq!(a.snapshot_holder_count, 2);
+    assert_eq!(a.entitlement_count, 2);
+    assert_eq!(a.total_gross, 500);
+
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    // The zero-balance holder can "claim" (nothing moves); the other gets 500.
+    let ix = claim_ix(&f, &holders[1], &pays[1], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[&holders[1].wallet]);
+    assert_eq!(token_state(&f.svm, &pays[1]).amount, 0);
+    assert!(read_entitlement(&f.svm, &entitlement_pda(&action, &pk(&holders[1].wallet))).claimed);
+
+    let ix = claim_ix(&f, &holders[0], &pays[0], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[&holders[0].wallet]);
+    assert_eq!(token_state(&f.svm, &pays[0]).amount, 500);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 0);
+}
+
+#[test]
+fn fund_rejected_until_every_holder_calculated() {
+    let mut f = fixture();
+    let (holders, _pays, env) = prepare_multi(
+        &mut f,
+        &[(Jurisdiction::Domestic, 10), (Jurisdiction::Domestic, 5)],
+        3,
+    );
+
+    // Calculate only the first holder.
+    let ix = calculate_ix(&f, &holders[0], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let ix = fund_ix(&f, &env, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("incomplete calculation must fail");
+    assert!(
+        err.contains("CalculationIncomplete"),
+        "expected CalculationIncomplete, got:\n{err}"
+    );
+
+    // Calculate the second holder: funding now succeeds with 500 + 250.
+    let ix = calculate_ix(&f, &holders[1], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let a = read_action(&f.svm, &action_pda(&f.bond, 1));
+    assert!(a.status == ActionStatus::Funded);
+    assert_eq!(a.funded_amount, 750);
+}
+
+#[test]
+fn non_issuer_cannot_create_or_fund() {
+    let mut f = fixture();
+    let holder = add_holder(&mut f, Jurisdiction::Domestic);
+    let ix = mint_bonds_ix(&f, &holder, 10);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let env = coupon_env(&mut f, 3);
+    record_date(&mut f, 1, &[&holder]);
+
+    let attacker = Keypair::new();
+    f.svm.airdrop(&attacker.pubkey(), 10_000_000_000).unwrap();
+
+    // Attacker tries to create the action.
+    let ix = with_signer(create_coupon_action_ix(&f, &env, 1), &attacker);
+    let err = send(&mut f.svm, &[ix], &attacker, &[]).expect_err("non-issuer create must fail");
+    assert!(
+        err.contains("Unauthorized"),
+        "expected Unauthorized, got:\n{err}"
+    );
+
+    // The real issuer creates and calculates; the attacker then tries to fund.
+    let ix = create_coupon_action_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = calculate_ix(&f, &holder, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let ix = with_signer(fund_ix(&f, &env, 1), &attacker);
+    let err = send(&mut f.svm, &[ix], &attacker, &[]).expect_err("non-issuer fund must fail");
+    assert!(
+        err.contains("Unauthorized"),
+        "expected Unauthorized, got:\n{err}"
+    );
+}
+
+#[test]
+fn ledger_cap_refuses_extra_coupon() {
+    let mut f = fixture();
+    let holder = add_holder(&mut f, Jurisdiction::Domestic);
+    let ix = mint_bonds_ix(&f, &holder, 10);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    // total_coupons = 2 includes the final coupon paid with redemption,
+    // so only ONE regular coupon action may exist.
+    let env = coupon_env(&mut f, 2);
+    record_date(&mut f, 1, &[&holder]);
+    let ix = create_coupon_action_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert_eq!(read_ledger(&f.svm, &env.ledger).coupons_created, 1);
+
+    // Second record date: the holder's account is still frozen from window 1,
+    // which snapshot_holder must handle.
+    record_date(&mut f, 2, &[&holder]);
+    let ix = create_coupon_action_ix(&f, &env, 2);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("extra coupon must be refused");
+    assert!(
+        err.contains("AllCouponsCreated"),
+        "expected AllCouponsCreated, got:\n{err}"
+    );
+}

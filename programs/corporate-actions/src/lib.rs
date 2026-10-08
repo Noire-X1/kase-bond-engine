@@ -32,4 +32,8 @@ pub mod corporate_actions {
     pub fn claim_coupon(ctx: Context<ClaimCoupon>) -> Result<()> {
         instructions::claim_coupon::handle_claim_coupon(ctx)
     }
+
+    pub fn sweep_withholding(ctx: Context<SweepWithholding>) -> Result<()> {
+        instructions::sweep_withholding::handle_sweep_withholding(ctx)
+    }
 }
