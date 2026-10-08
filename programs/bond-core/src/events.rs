@@ -61,3 +61,9 @@ pub struct HolderThawed {
     pub bond: Pubkey,
     pub wallet: Pubkey,
 }
+#[event]
+pub struct BondRedeemed {
+    pub bond: Pubkey,
+    pub burned_supply: u64,
+    pub ts: i64,
+}

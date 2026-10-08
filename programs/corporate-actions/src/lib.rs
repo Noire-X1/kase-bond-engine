@@ -21,6 +21,13 @@ pub mod corporate_actions {
         instructions::create_coupon_action::handle_create_coupon_action(ctx, epoch)
     }
 
+    pub fn create_redemption_action(
+        ctx: Context<CreateRedemptionAction>,
+        epoch: u32,
+    ) -> Result<()> {
+        instructions::create_redemption_action::handle_create_redemption_action(ctx, epoch)
+    }
+
     pub fn calculate_entitlement(ctx: Context<CalculateEntitlement>) -> Result<()> {
         instructions::calculate_entitlement::handle_calculate_entitlement(ctx)
     }
@@ -31,6 +38,10 @@ pub mod corporate_actions {
 
     pub fn claim_coupon(ctx: Context<ClaimCoupon>) -> Result<()> {
         instructions::claim_coupon::handle_claim_coupon(ctx)
+    }
+
+    pub fn claim_redemption(ctx: Context<ClaimRedemption>) -> Result<()> {
+        instructions::claim_redemption::handle_claim_redemption(ctx)
     }
 
     pub fn sweep_withholding(ctx: Context<SweepWithholding>) -> Result<()> {

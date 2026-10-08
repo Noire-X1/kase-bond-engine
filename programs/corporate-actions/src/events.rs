@@ -51,3 +51,13 @@ pub struct WithholdingSwept {
     pub amount: u64,
     pub tax_collector: Pubkey,
 }
+#[event]
+pub struct RedemptionClaimed {
+    pub action: Pubkey,
+    pub wallet: Pubkey,
+    pub quantity_burned: u64,
+    pub principal: u64,
+    pub coupon_gross: u64,
+    pub withheld: u64,
+    pub net: u64,
+}

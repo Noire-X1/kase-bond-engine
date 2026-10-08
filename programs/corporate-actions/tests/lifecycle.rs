@@ -1129,3 +1129,328 @@ fn ledger_cap_refuses_extra_coupon() {
         "expected AllCouponsCreated, got:\n{err}"
     );
 }
+
+// ===================================================== B5: redemption
+
+use litesvm_token::spl_token::state::Mint as MintState;
+use solana_clock::Clock;
+
+/// Bonds in these tests mature at 2_000_000_000 (see issue_bond_ix).
+const AFTER_MATURITY: i64 = 2_000_000_100;
+
+fn warp_to_ts(svm: &mut LiteSVM, unix_ts: i64) {
+    let mut clock = svm.get_sysvar::<Clock>();
+    clock.unix_timestamp = unix_ts;
+    svm.set_sysvar::<Clock>(&clock);
+}
+
+fn mint_supply(svm: &LiteSVM, key: &Pubkey) -> u64 {
+    let m: MintState = get_spl_account(svm, &key.to_bytes().into()).unwrap();
+    m.supply
+}
+
+fn create_redemption_ix(f: &Fixture, env: &CouponEnv, epoch: u32) -> Instruction {
+    let action = action_pda(&f.bond, epoch);
+    Instruction {
+        program_id: corporate_actions::ID,
+        accounts: corporate_actions::accounts::CreateRedemptionAction {
+            issuer: pk(&f.issuer),
+            bond: f.bond,
+            ledger: env.ledger,
+            snapshot_record: snapshot_pda(&f.bond, epoch),
+            payment_mint: f.payment_mint,
+            action,
+            vault: vault_pda(&action),
+            token_program: anchor_spl::token::ID,
+            system_program: anchor_lang::system_program::ID,
+        }
+        .to_account_metas(None),
+        data: corporate_actions::instruction::CreateRedemptionAction { epoch }.data(),
+    }
+}
+
+fn claim_redemption_ix(
+    f: &Fixture,
+    h: &Holder,
+    holder_payment: &Pubkey,
+    epoch: u32,
+) -> Instruction {
+    let action = action_pda(&f.bond, epoch);
+    Instruction {
+        program_id: corporate_actions::ID,
+        accounts: corporate_actions::accounts::ClaimRedemption {
+            holder: pk(&h.wallet),
+            bond: f.bond,
+            holder_record: h.record,
+            action,
+            entitlement: entitlement_pda(&action, &pk(&h.wallet)),
+            payment_mint: f.payment_mint,
+            vault: vault_pda(&action),
+            holder_payment_account: *holder_payment,
+            bond_mint: f.bond_mint,
+            holder_bond_account: h.token_account,
+            token_program: anchor_spl::token::ID,
+        }
+        .to_account_metas(None),
+        data: corporate_actions::instruction::ClaimRedemption {}.data(),
+    }
+}
+
+fn mark_redeemed_ix(f: &Fixture) -> Instruction {
+    Instruction {
+        program_id: bond_core::ID,
+        accounts: bond_core::accounts::MarkRedeemed {
+            cranker: pk(&f.issuer),
+            bond: f.bond,
+            bond_mint: f.bond_mint,
+        }
+        .to_account_metas(None),
+        data: bond_core::instruction::MarkRedeemed {}.data(),
+    }
+}
+
+/// Registers holders and mints bonds, sets up the coupon ledger, warps the clock
+/// past maturity, runs record date 1 (opened AFTER maturity) and creates the
+/// redemption action for epoch 1. total_coupons = 1 means no regular coupon
+/// precedes redemption. Calculation is left to the test.
+fn prepare_redemption(
+    f: &mut Fixture,
+    specs: &[(Jurisdiction, u64)],
+    total_coupons: u16,
+) -> (Vec<Holder>, Vec<Pubkey>, CouponEnv) {
+    let mut holders = Vec::new();
+    for (j, bonds) in specs {
+        let h = add_holder(f, *j);
+        if *bonds > 0 {
+            let ix = mint_bonds_ix(f, &h, *bonds);
+            send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+        }
+        holders.push(h);
+    }
+    let env = coupon_env(f, total_coupons);
+    let pays: Vec<Pubkey> = holders
+        .iter()
+        .map(|h| payment_account_for(f, &h.wallet))
+        .collect();
+
+    warp_to_ts(&mut f.svm, AFTER_MATURITY);
+    let refs: Vec<&Holder> = holders.iter().collect();
+    record_date(f, 1, &refs);
+
+    let ix = create_redemption_ix(f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    (holders, pays, env)
+}
+
+#[test]
+fn redemption_pays_principal_plus_final_coupon_burns_and_marks_redeemed() {
+    let mut f = fixture();
+    let (holders, pays, env) = prepare_redemption(
+        &mut f,
+        &[(Jurisdiction::Domestic, 10), (Jurisdiction::Domestic, 5)],
+        1,
+    );
+    let action = action_pda(&f.bond, 1);
+    for h in &holders {
+        let ix = calculate_ix(&f, h, 1);
+        send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    }
+
+    // Spec example: 10 bonds -> 10,000 principal + 500 final coupon.
+    let e1 = read_entitlement(&f.svm, &entitlement_pda(&action, &pk(&holders[0].wallet)));
+    assert_eq!(
+        (e1.quantity, e1.principal, e1.coupon_gross, e1.gross, e1.withheld, e1.net),
+        (10, 10_000, 500, 10_500, 0, 10_500)
+    );
+    let a = read_action(&f.svm, &action);
+    assert!(a.kind == ActionKind::Redemption);
+    assert_eq!(a.action_index, 0);
+    assert_eq!(a.total_gross, 15_750); // 10,500 + 5,250
+    assert!(read_ledger(&f.svm, &env.ledger).redemption_created);
+
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 15_750);
+
+    // Claim WITHOUT thawing first: refused, and nothing moves.
+    let ix = claim_redemption_ix(&f, &holders[0], &pays[0], 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[&holders[0].wallet])
+        .expect_err("claim on a frozen bond account must fail");
+    assert!(
+        err.contains("BondAccountFrozen"),
+        "expected BondAccountFrozen, got:\n{err}"
+    );
+    assert_eq!(token_state(&f.svm, &holders[0].token_account).amount, 10);
+    assert_eq!(token_state(&f.svm, &pays[0]).amount, 0);
+
+    // Bundle thaw + claim in ONE transaction.
+    let thaw = thaw_ix(&f, &holders[0]);
+    let claim = claim_redemption_ix(&f, &holders[0], &pays[0], 1);
+    send_ok(&mut f.svm, &[thaw, claim], &f.issuer, &[&holders[0].wallet]);
+    assert_eq!(token_state(&f.svm, &pays[0]).amount, 10_500);
+    assert_eq!(token_state(&f.svm, &holders[0].token_account).amount, 0);
+    assert_eq!(mint_supply(&f.svm, &f.bond_mint), 5);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 5_250);
+
+    // 5 bonds are still outstanding, so the bond cannot be marked redeemed yet.
+    let ix = mark_redeemed_ix(&f);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("must refuse while supply > 0");
+    assert!(
+        err.contains("SupplyOutstanding"),
+        "expected SupplyOutstanding, got:\n{err}"
+    );
+
+    // Double claim refused.
+    let ix = claim_redemption_ix(&f, &holders[0], &pays[0], 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[&holders[0].wallet])
+        .expect_err("second claim must fail");
+    assert!(
+        err.contains("AlreadyClaimed"),
+        "expected AlreadyClaimed, got:\n{err}"
+    );
+
+    // Second holder redeems: vault empties, supply reaches 0.
+    let thaw = thaw_ix(&f, &holders[1]);
+    let claim = claim_redemption_ix(&f, &holders[1], &pays[1], 1);
+    send_ok(&mut f.svm, &[thaw, claim], &f.issuer, &[&holders[1].wallet]);
+    assert_eq!(token_state(&f.svm, &pays[1]).amount, 5_250);
+    assert_eq!(mint_supply(&f.svm, &f.bond_mint), 0);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 0);
+    assert_eq!(read_action(&f.svm, &action).claimed_count, 2);
+
+    // Now the bond can be marked Redeemed.
+    let ix = mark_redeemed_ix(&f);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert!(read_bond(&f.svm, &f.bond).status == BondStatus::Redeemed);
+}
+
+#[test]
+fn redemption_refused_before_maturity() {
+    let mut f = fixture();
+    let h = add_holder(&mut f, Jurisdiction::Domestic);
+    let ix = mint_bonds_ix(&f, &h, 10);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let env = coupon_env(&mut f, 1);
+    record_date(&mut f, 1, &[&h]); // clock has not reached maturity
+
+    let ix = create_redemption_ix(&f, &env, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("must refuse before maturity");
+    assert!(err.contains("NotMatured"), "expected NotMatured, got:\n{err}");
+}
+
+#[test]
+fn redemption_refused_while_coupon_outstanding() {
+    let mut f = fixture();
+    let h = add_holder(&mut f, Jurisdiction::Domestic);
+    let ix = mint_bonds_ix(&f, &h, 10);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    // total_coupons = 2: one regular coupon must be paid before redemption.
+    let env = coupon_env(&mut f, 2);
+    warp_to_ts(&mut f.svm, AFTER_MATURITY);
+    record_date(&mut f, 1, &[&h]);
+
+    let ix = create_redemption_ix(&f, &env, 1);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("coupon still outstanding");
+    assert!(
+        err.contains("CouponsOutstanding"),
+        "expected CouponsOutstanding, got:\n{err}"
+    );
+}
+
+#[test]
+fn redemption_withholding_applies_to_coupon_part_only() {
+    // Foreign holders: 15% withholding. It must hit the 500 coupon, never the principal.
+    let mut f = fixture_with_withholding(0, 1_500);
+    let (holders, pays, env) =
+        prepare_redemption(&mut f, &[(Jurisdiction::Foreign, 10)], 1);
+    let action = action_pda(&f.bond, 1);
+    let ix = calculate_ix(&f, &holders[0], 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let e = read_entitlement(&f.svm, &entitlement_pda(&action, &pk(&holders[0].wallet)));
+    assert_eq!(e.principal, 10_000);
+    assert_eq!(e.coupon_gross, 500);
+    assert_eq!(e.gross, 10_500);
+    assert_eq!(e.withheld, 75); // 15% of 500 only
+    assert_eq!(e.net, 10_425);
+
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 10_500);
+
+    let ix = sweep_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert_eq!(token_state(&f.svm, &env.tax_collector).amount, 75);
+
+    let thaw = thaw_ix(&f, &holders[0]);
+    let claim = claim_redemption_ix(&f, &holders[0], &pays[0], 1);
+    send_ok(&mut f.svm, &[thaw, claim], &f.issuer, &[&holders[0].wallet]);
+    assert_eq!(token_state(&f.svm, &pays[0]).amount, 10_425);
+    assert_eq!(token_state(&f.svm, &vault_pda(&action)).amount, 0);
+    assert_eq!(mint_supply(&f.svm, &f.bond_mint), 0);
+}
+
+#[test]
+fn mark_redeemed_refused_before_maturity() {
+    let mut f = fixture();
+    let ix = mark_redeemed_ix(&f);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[]).expect_err("must refuse before maturity");
+    assert!(err.contains("NotMatured"), "expected NotMatured, got:\n{err}");
+}
+
+#[test]
+fn full_lifecycle_coupon_then_redemption() {
+    let mut f = fixture();
+    let h = add_holder(&mut f, Jurisdiction::Domestic);
+    let ix = mint_bonds_ix(&f, &h, 10);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    // total_coupons = 2: one regular coupon, then the final coupon rides with redemption.
+    let env = coupon_env(&mut f, 2);
+    let pay = payment_account_for(&mut f, &h.wallet);
+
+    // --- Coupon 1: record date 1, before maturity ---
+    record_date(&mut f, 1, &[&h]);
+    let ix = create_coupon_action_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = calculate_ix(&f, &h, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = fund_ix(&f, &env, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = claim_ix(&f, &h, &pay, 1);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[&h.wallet]);
+    assert_eq!(token_state(&f.svm, &pay).amount, 500);
+    assert_eq!(read_ledger(&f.svm, &env.ledger).coupons_paid, 1);
+
+    // --- A record window opened BEFORE maturity cannot be used for redemption ---
+    record_date(&mut f, 2, &[&h]);
+    warp_to_ts(&mut f.svm, AFTER_MATURITY);
+    let ix = create_redemption_ix(&f, &env, 2);
+    let err = send(&mut f.svm, &[ix], &f.issuer, &[])
+        .expect_err("pre-maturity snapshot must be refused");
+    assert!(
+        err.contains("SnapshotBeforeMaturity"),
+        "expected SnapshotBeforeMaturity, got:\n{err}"
+    );
+
+    // --- Record date 3 after maturity: redemption ---
+    record_date(&mut f, 3, &[&h]);
+    let ix = create_redemption_ix(&f, &env, 3);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = calculate_ix(&f, &h, 3);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    let ix = fund_ix(&f, &env, 3);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+
+    let thaw = thaw_ix(&f, &h);
+    let claim = claim_redemption_ix(&f, &h, &pay, 3);
+    send_ok(&mut f.svm, &[thaw, claim], &f.issuer, &[&h.wallet]);
+
+    // 500 coupon + 10,000 principal + 500 final coupon.
+    assert_eq!(token_state(&f.svm, &pay).amount, 11_000);
+    assert_eq!(token_state(&f.svm, &h.token_account).amount, 0);
+    assert_eq!(mint_supply(&f.svm, &f.bond_mint), 0);
+
+    let ix = mark_redeemed_ix(&f);
+    send_ok(&mut f.svm, &[ix], &f.issuer, &[]);
+    assert!(read_bond(&f.svm, &f.bond).status == BondStatus::Redeemed);
+}

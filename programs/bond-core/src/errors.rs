@@ -42,4 +42,10 @@ pub enum BondError {
     SnapshotIncomplete,
     #[msg("Token account is not frozen")]
     AccountNotFrozen,
+    #[msg("Bond has not reached maturity")]
+    NotMatured,
+    #[msg("Bond tokens are still outstanding: not every holder has redeemed")]
+    SupplyOutstanding,
+    #[msg("No bonds were ever issued")]
+    NothingIssued,
 }

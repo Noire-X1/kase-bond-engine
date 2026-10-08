@@ -44,4 +44,10 @@ pub enum ActionError {
     NothingToSweep,
     #[msg("Arithmetic overflow")]
     MathOverflow,
+    #[msg("Redemption record window must open at or after maturity")]
+    SnapshotBeforeMaturity,
+    #[msg("Thaw the holder's bond account first (bond-core thaw_holder)")]
+    BondAccountFrozen,
+    #[msg("Holder no longer holds the snapshot quantity of bonds")]
+    InsufficientBonds,
 }

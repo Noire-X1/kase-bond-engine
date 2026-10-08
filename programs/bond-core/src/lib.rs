@@ -45,4 +45,8 @@ pub mod bond_core {
     pub fn thaw_holder(ctx: Context<ThawHolder>) -> Result<()> {
         instructions::thaw_holder::handle_thaw_holder(ctx)
     }
+
+    pub fn mark_redeemed(ctx: Context<MarkRedeemed>) -> Result<()> {
+        instructions::mark_redeemed::handle_mark_redeemed(ctx)
+    }
 }
