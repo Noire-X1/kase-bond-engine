@@ -1,0 +1,1222 @@
+{
+  "address": "GsYLz1ieJSo267DW3oga1k4hAmVoqTHgKaEw2K5HxJPT",
+  "metadata": {
+    "name": "bond_core",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "close_record_window",
+      "discriminator": [
+        183,
+        49,
+        127,
+        138,
+        11,
+        205,
+        90,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "writable": true
+        },
+        {
+          "name": "bond_mint"
+        },
+        {
+          "name": "snapshot_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  110,
+                  97,
+                  112,
+                  115,
+                  104,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "bond.record_epoch",
+                "account": "BondState"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "issue_bond",
+      "discriminator": [
+        89,
+        175,
+        93,
+        128,
+        140,
+        237,
+        182,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "issuer"
+              },
+              {
+                "kind": "arg",
+                "path": "params.bond_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bond_mint",
+          "docs": [
+            "1 token = 1 bond, so 0 decimals. The bond PDA is both mint and freeze",
+            "authority: only program instructions can mint, snapshot-freeze or thaw."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_mint",
+          "docs": [
+            "Existing test SPL token that stands in for KZT/USDC (simulated rail)."
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "IssueBondParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "mark_redeemed",
+      "discriminator": [
+        105,
+        73,
+        221,
+        145,
+        33,
+        6,
+        243,
+        171
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "writable": true
+        },
+        {
+          "name": "bond_mint"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mint_bonds",
+      "discriminator": [
+        226,
+        251,
+        218,
+        163,
+        237,
+        250,
+        226,
+        199
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "writable": true,
+          "relations": [
+            "holder_record"
+          ]
+        },
+        {
+          "name": "bond_mint",
+          "writable": true
+        },
+        {
+          "name": "holder_record"
+        },
+        {
+          "name": "holder_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "open_record_window",
+      "discriminator": [
+        201,
+        114,
+        87,
+        61,
+        213,
+        121,
+        197,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "writable": true
+        },
+        {
+          "name": "snapshot_record",
+          "docs": [
+            "One audit record per record-date window (epoch = previous epoch + 1)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_holder",
+      "discriminator": [
+        113,
+        111,
+        117,
+        246,
+        175,
+        59,
+        98,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond"
+        },
+        {
+          "name": "bond_mint"
+        },
+        {
+          "name": "wallet",
+          "docs": [
+            "token-account owner check); it does not need to sign."
+          ]
+        },
+        {
+          "name": "holder_token_account",
+          "docs": [
+            "The investor's existing bond token account (must be owned by `wallet`)."
+          ]
+        },
+        {
+          "name": "holder_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "jurisdiction",
+          "type": {
+            "defined": {
+              "name": "Jurisdiction"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "snapshot_holder",
+      "discriminator": [
+        33,
+        225,
+        166,
+        163,
+        73,
+        94,
+        167,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "writable": true,
+          "relations": [
+            "holder_record"
+          ]
+        },
+        {
+          "name": "bond_mint"
+        },
+        {
+          "name": "holder_record",
+          "writable": true
+        },
+        {
+          "name": "holder_token_account",
+          "writable": true
+        },
+        {
+          "name": "snapshot_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  110,
+                  97,
+                  112,
+                  115,
+                  104,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "bond.record_epoch",
+                "account": "BondState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "thaw_holder",
+      "discriminator": [
+        56,
+        60,
+        31,
+        119,
+        186,
+        131,
+        171,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "holder_record"
+          ]
+        },
+        {
+          "name": "bond_mint"
+        },
+        {
+          "name": "holder_record"
+        },
+        {
+          "name": "holder_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "BondState",
+      "discriminator": [
+        251,
+        95,
+        76,
+        47,
+        191,
+        108,
+        163,
+        92
+      ]
+    },
+    {
+      "name": "HolderRecord",
+      "discriminator": [
+        215,
+        67,
+        31,
+        41,
+        155,
+        251,
+        178,
+        128
+      ]
+    },
+    {
+      "name": "SnapshotRecord",
+      "discriminator": [
+        224,
+        169,
+        148,
+        20,
+        79,
+        195,
+        32,
+        106
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BondIssued",
+      "discriminator": [
+        42,
+        215,
+        210,
+        134,
+        104,
+        101,
+        194,
+        60
+      ]
+    },
+    {
+      "name": "BondRedeemed",
+      "discriminator": [
+        188,
+        237,
+        184,
+        77,
+        43,
+        59,
+        193,
+        108
+      ]
+    },
+    {
+      "name": "BondsMinted",
+      "discriminator": [
+        247,
+        150,
+        12,
+        205,
+        129,
+        157,
+        52,
+        33
+      ]
+    },
+    {
+      "name": "HolderRegistered",
+      "discriminator": [
+        201,
+        78,
+        223,
+        133,
+        103,
+        164,
+        173,
+        136
+      ]
+    },
+    {
+      "name": "HolderSnapshotted",
+      "discriminator": [
+        150,
+        155,
+        26,
+        183,
+        44,
+        30,
+        104,
+        143
+      ]
+    },
+    {
+      "name": "HolderThawed",
+      "discriminator": [
+        31,
+        139,
+        193,
+        108,
+        22,
+        10,
+        102,
+        147
+      ]
+    },
+    {
+      "name": "RecordWindowClosed",
+      "discriminator": [
+        171,
+        253,
+        149,
+        228,
+        89,
+        0,
+        28,
+        12
+      ]
+    },
+    {
+      "name": "RecordWindowOpened",
+      "discriminator": [
+        3,
+        228,
+        112,
+        223,
+        34,
+        252,
+        0,
+        216
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidFaceValue",
+      "msg": "Face value must be greater than zero"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidCouponRate",
+      "msg": "Coupon rate must be between 0 and 10000 bps"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidCouponFrequency",
+      "msg": "Coupons per year must be 1, 2, 4 or 12"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidMaturity",
+      "msg": "Maturity must be in the future"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidMaxSupply",
+      "msg": "Max supply must be greater than zero"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidWithholdingRate",
+      "msg": "Withholding rate must be between 0 and 10000 bps"
+    },
+    {
+      "code": 6006,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6007,
+      "name": "ZeroPeriods",
+      "msg": "Coupon periods must be greater than zero"
+    },
+    {
+      "code": 6008,
+      "name": "Unauthorized",
+      "msg": "Only the bond issuer can do this"
+    },
+    {
+      "code": 6009,
+      "name": "WrongBond",
+      "msg": "Account belongs to a different bond"
+    },
+    {
+      "code": 6010,
+      "name": "WrongMint",
+      "msg": "Wrong bond mint"
+    },
+    {
+      "code": 6011,
+      "name": "WrongTokenAccount",
+      "msg": "Wrong token account for this holder"
+    },
+    {
+      "code": 6012,
+      "name": "BondNotActive",
+      "msg": "Bond is not active"
+    },
+    {
+      "code": 6013,
+      "name": "WindowOpen",
+      "msg": "A record window is already open"
+    },
+    {
+      "code": 6014,
+      "name": "WindowNotOpen",
+      "msg": "No record window is open"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6016,
+      "name": "MaxSupplyExceeded",
+      "msg": "Minting would exceed max supply"
+    },
+    {
+      "code": 6017,
+      "name": "AlreadySnapshotted",
+      "msg": "Holder already snapshotted in this window"
+    },
+    {
+      "code": 6018,
+      "name": "SnapshotIncomplete",
+      "msg": "Snapshot incomplete: snapshotted balances do not equal total supply"
+    },
+    {
+      "code": 6019,
+      "name": "AccountNotFrozen",
+      "msg": "Token account is not frozen"
+    },
+    {
+      "code": 6020,
+      "name": "NotMatured",
+      "msg": "Bond has not reached maturity"
+    },
+    {
+      "code": 6021,
+      "name": "SupplyOutstanding",
+      "msg": "Bond tokens are still outstanding: not every holder has redeemed"
+    },
+    {
+      "code": 6022,
+      "name": "NothingIssued",
+      "msg": "No bonds were ever issued"
+    }
+  ],
+  "types": [
+    {
+      "name": "BondIssued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bond_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "payment_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "face_value",
+            "type": "u64"
+          },
+          {
+            "name": "coupon_rate_bps",
+            "type": "u16"
+          },
+          {
+            "name": "coupons_per_year",
+            "type": "u8"
+          },
+          {
+            "name": "maturity_ts",
+            "type": "i64"
+          },
+          {
+            "name": "max_supply",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondRedeemed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "burned_supply",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bond_id",
+            "type": "u64"
+          },
+          {
+            "name": "bond_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "payment_mint",
+            "docs": [
+              "Test SPL token standing in for KZT/USDC (simulated fiat rail)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "face_value",
+            "type": "u64"
+          },
+          {
+            "name": "coupon_rate_bps",
+            "type": "u16"
+          },
+          {
+            "name": "coupons_per_year",
+            "type": "u8"
+          },
+          {
+            "name": "issue_ts",
+            "type": "i64"
+          },
+          {
+            "name": "maturity_ts",
+            "type": "i64"
+          },
+          {
+            "name": "max_supply",
+            "type": "u64"
+          },
+          {
+            "name": "minted_supply",
+            "type": "u64"
+          },
+          {
+            "name": "withholding_bps_domestic",
+            "type": "u16"
+          },
+          {
+            "name": "withholding_bps_foreign",
+            "type": "u16"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BondStatus"
+              }
+            }
+          },
+          {
+            "name": "record_epoch",
+            "type": "u32"
+          },
+          {
+            "name": "window_open",
+            "type": "bool"
+          },
+          {
+            "name": "record_slot",
+            "type": "u64"
+          },
+          {
+            "name": "snapshotted_supply",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Redeemed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondsMinted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "minted_supply",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderRecord",
+      "docs": [
+        "Holder registry: one record per (bond, wallet)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "docs": [
+              "The one token account that holds this wallet's bonds for this bond."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "jurisdiction",
+            "type": {
+              "defined": {
+                "name": "Jurisdiction"
+              }
+            }
+          },
+          {
+            "name": "snapshot_balance",
+            "type": "u64"
+          },
+          {
+            "name": "snapshot_epoch",
+            "type": "u32"
+          },
+          {
+            "name": "snapshot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "registered_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "jurisdiction",
+            "type": {
+              "defined": {
+                "name": "Jurisdiction"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderSnapshotted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch",
+            "type": "u32"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderThawed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IssueBondParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond_id",
+            "type": "u64"
+          },
+          {
+            "name": "face_value",
+            "type": "u64"
+          },
+          {
+            "name": "coupon_rate_bps",
+            "type": "u16"
+          },
+          {
+            "name": "coupons_per_year",
+            "type": "u8"
+          },
+          {
+            "name": "maturity_ts",
+            "type": "i64"
+          },
+          {
+            "name": "max_supply",
+            "type": "u64"
+          },
+          {
+            "name": "withholding_bps_domestic",
+            "type": "u16"
+          },
+          {
+            "name": "withholding_bps_foreign",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Jurisdiction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Domestic"
+          },
+          {
+            "name": "Foreign"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RecordWindowClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch",
+            "type": "u32"
+          },
+          {
+            "name": "total_supply",
+            "type": "u64"
+          },
+          {
+            "name": "holder_count",
+            "type": "u32"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RecordWindowOpened",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch",
+            "type": "u32"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SnapshotRecord",
+      "docs": [
+        "Persistent audit record of one record-date window (one per epoch)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch",
+            "type": "u32"
+          },
+          {
+            "name": "opened_slot",
+            "type": "u64"
+          },
+          {
+            "name": "opened_ts",
+            "type": "i64"
+          },
+          {
+            "name": "closed",
+            "type": "bool"
+          },
+          {
+            "name": "closed_slot",
+            "type": "u64"
+          },
+          {
+            "name": "closed_ts",
+            "type": "i64"
+          },
+          {
+            "name": "total_supply",
+            "type": "u64"
+          },
+          {
+            "name": "holder_count",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

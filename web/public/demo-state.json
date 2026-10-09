@@ -1,0 +1,364 @@
+{
+  "cluster": "devnet",
+  "generatedAt": "2026-10-09T02:10:04.571Z",
+  "programs": {
+    "bondCore": "GsYLz1ieJSo267DW3oga1k4hAmVoqTHgKaEw2K5HxJPT",
+    "actions": "59hoGMNeum386CpHQpbsUStq51vfXS9iYxPkq5apthNg",
+    "governance": "D4Zh5HNxQwuzqFJFsw5BFNBfkAGtW7Efk5VRTnFNwEqg"
+  },
+  "bond": {
+    "address": "8oC6TyaooxbUJsLM6JfUkUe4bngi7uwwUCmdy9fbWdK9",
+    "mint": "24cT1buEs3bigUCFzDGFhV5tiWZhRsaMv7wnnxQxgd6w",
+    "paymentMint": "8D8W6pPWMB3MFkW9riBhh7yF3RsnLQWaoXY7J5Ue6Fga",
+    "issuer": "9f7SqVfYGiGFEAJMxpDwdXLpbuZopGNq9M9GyyBD5fHh",
+    "taxCollector": "7C3s7F7oiRwck1FD59aKm2sVB1sQGRHYoF4MYvss5K12",
+    "faceValue": 100000,
+    "decimals": 2,
+    "couponRateBps": 1000,
+    "periods": 2,
+    "maturityTs": 1791511836,
+    "status": "redeemed",
+    "totalCoupons": 2
+  },
+  "holders": [
+    {
+      "name": "Investor A (domestic)",
+      "wallet": "G6hvuBCavHp13pzUHHxT51RsozJip93eMxxtiA84s9t7",
+      "jurisdiction": "Domestic",
+      "bonds": 10,
+      "coupon": {
+        "gross": 50000,
+        "withheld": 0,
+        "net": 50000
+      },
+      "redemption": {
+        "principal": 1000000,
+        "couponGross": 50000,
+        "gross": 1050000,
+        "withheld": 0,
+        "net": 1050000
+      },
+      "vote": {
+        "choice": "For",
+        "weight": 10
+      },
+      "finalBalance": 1100000
+    },
+    {
+      "name": "Investor B (foreign)",
+      "wallet": "DhtzgWgLzKTqYigNk2kYDZQfnJBe5pFVFwHzputzzv1T",
+      "jurisdiction": "Foreign",
+      "bonds": 5,
+      "coupon": {
+        "gross": 25000,
+        "withheld": 3750,
+        "net": 21250
+      },
+      "redemption": {
+        "principal": 500000,
+        "couponGross": 25000,
+        "gross": 525000,
+        "withheld": 3750,
+        "net": 521250
+      },
+      "vote": {
+        "choice": "Against",
+        "weight": 5
+      },
+      "finalBalance": 542500
+    },
+    {
+      "name": "Investor C (domestic)",
+      "wallet": "GgBxUGvVAwng1S5wuqwmBVUH26Fak1ZjGyMLxpuMEuEt",
+      "jurisdiction": "Domestic",
+      "bonds": 20,
+      "coupon": {
+        "gross": 100000,
+        "withheld": 0,
+        "net": 100000
+      },
+      "redemption": {
+        "principal": 2000000,
+        "couponGross": 100000,
+        "gross": 2100000,
+        "withheld": 0,
+        "net": 2100000
+      },
+      "vote": {
+        "choice": "For",
+        "weight": 20
+      },
+      "finalBalance": 2200000
+    }
+  ],
+  "proposal": {
+    "address": "DhJrFZ9X5pzUun7KNg1fsofBPtAVdta4VpXvL2z7Hg4v",
+    "title": "Approve covenant waiver",
+    "status": "passed",
+    "votesFor": 30,
+    "votesAgainst": 5,
+    "votesAbstain": 0,
+    "voters": 3,
+    "quorumBps": 5000
+  },
+  "steps": [
+    {
+      "step": "Fund investor wallets (rent for vote records)",
+      "sig": "574Ny7aWEAhcjz6owgF8CBcHGnKi9FRE9SkYttQ8DmgPhN8w2vDT4ae4TnqG5wNs8s2FhJpkS2uC3AWa8bj9gHup",
+      "url": "https://explorer.solana.com/tx/574Ny7aWEAhcjz6owgF8CBcHGnKi9FRE9SkYttQ8DmgPhN8w2vDT4ae4TnqG5wNs8s2FhJpkS2uC3AWa8bj9gHup?cluster=devnet",
+      "ts": 1791511469058
+    },
+    {
+      "step": "Issue bond",
+      "sig": "3qVwxCcdqBErxfA3JX4XKbhCywFBYKbsty1eCwcFjwzwN7YyuS1c13AowrJts2RxrHmhQByMxBnRK5bgfKa7iyrg",
+      "url": "https://explorer.solana.com/tx/3qVwxCcdqBErxfA3JX4XKbhCywFBYKbsty1eCwcFjwzwN7YyuS1c13AowrJts2RxrHmhQByMxBnRK5bgfKa7iyrg?cluster=devnet",
+      "ts": 1791511476300
+    },
+    {
+      "step": "Initialize coupon ledger",
+      "sig": "5UyRFoqtA7rVbJJSiKGrhUqpuocY1ZPqYecLo7pm4wbR9rUjcC3W4CuDrW7RZgg3jKAf1GVYMHKSE1nC28yfSg5R",
+      "url": "https://explorer.solana.com/tx/5UyRFoqtA7rVbJJSiKGrhUqpuocY1ZPqYecLo7pm4wbR9rUjcC3W4CuDrW7RZgg3jKAf1GVYMHKSE1nC28yfSg5R?cluster=devnet",
+      "ts": 1791511477289
+    },
+    {
+      "step": "Register Investor A (domestic)",
+      "sig": "5YYfvmgnQi4VmgAuQcjjGVmoowKxfk2pekdQwTbd431pwGqacFfnw1Npmb5scDC5ozAGcmag26zLfAL7AdquUuWn",
+      "url": "https://explorer.solana.com/tx/5YYfvmgnQi4VmgAuQcjjGVmoowKxfk2pekdQwTbd431pwGqacFfnw1Npmb5scDC5ozAGcmag26zLfAL7AdquUuWn?cluster=devnet",
+      "ts": 1791511482334
+    },
+    {
+      "step": "Mint 10 bonds to Investor A (domestic)",
+      "sig": "3FKoHnAaR7u3GFMRqZbtiFjGcHW3uB2QNggrLV6HN4ApxyAxvcFUApgyvQtPpuyB5AxxQf3porYwsXTk2WDUHTkw",
+      "url": "https://explorer.solana.com/tx/3FKoHnAaR7u3GFMRqZbtiFjGcHW3uB2QNggrLV6HN4ApxyAxvcFUApgyvQtPpuyB5AxxQf3porYwsXTk2WDUHTkw?cluster=devnet",
+      "ts": 1791511483390
+    },
+    {
+      "step": "Register Investor B (foreign)",
+      "sig": "3McCzspPrEGvqbH8VE4hPVgjLUatASDyyiTX1iLDMqvEzAUu2GmC2NKr8rzt5iwev878k9JTa396iqb8S2kn8jMG",
+      "url": "https://explorer.solana.com/tx/3McCzspPrEGvqbH8VE4hPVgjLUatASDyyiTX1iLDMqvEzAUu2GmC2NKr8rzt5iwev878k9JTa396iqb8S2kn8jMG?cluster=devnet",
+      "ts": 1791511488242
+    },
+    {
+      "step": "Mint 5 bonds to Investor B (foreign)",
+      "sig": "21ycMrf2crNsFSVEEqB5LNdtxd4kxq8YGXpDjae22Kv9hVaV3KTWA6Pve45fjuN77LZq5L4KRxadc7u4ksg2QEmw",
+      "url": "https://explorer.solana.com/tx/21ycMrf2crNsFSVEEqB5LNdtxd4kxq8YGXpDjae22Kv9hVaV3KTWA6Pve45fjuN77LZq5L4KRxadc7u4ksg2QEmw?cluster=devnet",
+      "ts": 1791511489303
+    },
+    {
+      "step": "Register Investor C (domestic)",
+      "sig": "q1eZevhSk8Jxz3jNYbryMLHXVTRrJYJ2ahA5zSYy2N2B5PPKDesU9UmepaU8UUYnHLGQys1o1zfG7XDiPAfgkNg",
+      "url": "https://explorer.solana.com/tx/q1eZevhSk8Jxz3jNYbryMLHXVTRrJYJ2ahA5zSYy2N2B5PPKDesU9UmepaU8UUYnHLGQys1o1zfG7XDiPAfgkNg?cluster=devnet",
+      "ts": 1791511493142
+    },
+    {
+      "step": "Mint 20 bonds to Investor C (domestic)",
+      "sig": "2dVnHc38Cug9JkAYY74o4p4tyu2Yu7bH3xmuQvp2vD66iR7uDnwcmFKAg4zaAUWbFuSDYseHGn21hNHHhDDXUPdw",
+      "url": "https://explorer.solana.com/tx/2dVnHc38Cug9JkAYY74o4p4tyu2Yu7bH3xmuQvp2vD66iR7uDnwcmFKAg4zaAUWbFuSDYseHGn21hNHHhDDXUPdw?cluster=devnet",
+      "ts": 1791511494113
+    },
+    {
+      "step": "Open record window 1",
+      "sig": "4WJEdUXmhKkBXeoFdyHhSsKtmcvw8xPYuJVuQuTLhd2WCCjTy9LjMkCDCLicLWda12siAX8CYY7KREFVACWsYj4V",
+      "url": "https://explorer.solana.com/tx/4WJEdUXmhKkBXeoFdyHhSsKtmcvw8xPYuJVuQuTLhd2WCCjTy9LjMkCDCLicLWda12siAX8CYY7KREFVACWsYj4V?cluster=devnet",
+      "ts": 1791511495030
+    },
+    {
+      "step": "Snapshot Investor A (domestic) (window 1)",
+      "sig": "3V7EWdqEZYVaSsEWsUotWSCt7WUHq6Pn7ozJiAHLbHJE1cN5tc1ocbfzrXfEvtojTGuUqTD7ubuTremAVA19AVqG",
+      "url": "https://explorer.solana.com/tx/3V7EWdqEZYVaSsEWsUotWSCt7WUHq6Pn7ozJiAHLbHJE1cN5tc1ocbfzrXfEvtojTGuUqTD7ubuTremAVA19AVqG?cluster=devnet",
+      "ts": 1791511495918
+    },
+    {
+      "step": "Snapshot Investor B (foreign) (window 1)",
+      "sig": "2BjSDw5hgEvfGirMjuuYPAAvM1JkAoT8oysTzqXpW2vmuMqGNVsDM3hZESvhZzG3aiaSyM58gmRcnnwtZa5nsCEr",
+      "url": "https://explorer.solana.com/tx/2BjSDw5hgEvfGirMjuuYPAAvM1JkAoT8oysTzqXpW2vmuMqGNVsDM3hZESvhZzG3aiaSyM58gmRcnnwtZa5nsCEr?cluster=devnet",
+      "ts": 1791511496924
+    },
+    {
+      "step": "Snapshot Investor C (domestic) (window 1)",
+      "sig": "3Xvms62sH1rhUVehUa3M576Pezevj2dbxbUueVru7z4hNm1YoH19i9z6bYMMG8FvMhJ6BtsqWS9aeGiiKqVEsHp7",
+      "url": "https://explorer.solana.com/tx/3Xvms62sH1rhUVehUa3M576Pezevj2dbxbUueVru7z4hNm1YoH19i9z6bYMMG8FvMhJ6BtsqWS9aeGiiKqVEsHp7?cluster=devnet",
+      "ts": 1791511498350
+    },
+    {
+      "step": "Close record window 1",
+      "sig": "2ShSGaC2XoH3qT2zLPyb8w57pBxhf7bXqLPXSR4w24MV7TTmr6h2nCVzPqiZnPHrkYsPURrdyVcjpAfNmTFytwpQ",
+      "url": "https://explorer.solana.com/tx/2ShSGaC2XoH3qT2zLPyb8w57pBxhf7bXqLPXSR4w24MV7TTmr6h2nCVzPqiZnPHrkYsPURrdyVcjpAfNmTFytwpQ?cluster=devnet",
+      "ts": 1791511499320
+    },
+    {
+      "step": "Create coupon action",
+      "sig": "vyyNxsF7cTPLW78RMKJKhM87Qfppm6YU64HZq3V4DtwonnBPRqQoioRcddmJfSy7sEptzWFyUb7d6HDwj5fYjbw",
+      "url": "https://explorer.solana.com/tx/vyyNxsF7cTPLW78RMKJKhM87Qfppm6YU64HZq3V4DtwonnBPRqQoioRcddmJfSy7sEptzWFyUb7d6HDwj5fYjbw?cluster=devnet",
+      "ts": 1791511500330
+    },
+    {
+      "step": "Calculate entitlement: Investor A (domestic) (coupon)",
+      "sig": "21nUHsoUZLJZ3fBTKz33xMekojjhkG5i4Ccy7r7VjiGQuQM4U2QSAXvmssuksZ5UHoUwpn6NvVHgQAmYFZBEUQei",
+      "url": "https://explorer.solana.com/tx/21nUHsoUZLJZ3fBTKz33xMekojjhkG5i4Ccy7r7VjiGQuQM4U2QSAXvmssuksZ5UHoUwpn6NvVHgQAmYFZBEUQei?cluster=devnet",
+      "ts": 1791511501515
+    },
+    {
+      "step": "Calculate entitlement: Investor B (foreign) (coupon)",
+      "sig": "57hinVAa4HGFsR19aTh7bJFHvb28ifck7d1XYEwHa3hAkLRm8P76wBewuu4BC7ZNVqhr39d9cFSf5oRpuEfVZvbU",
+      "url": "https://explorer.solana.com/tx/57hinVAa4HGFsR19aTh7bJFHvb28ifck7d1XYEwHa3hAkLRm8P76wBewuu4BC7ZNVqhr39d9cFSf5oRpuEfVZvbU?cluster=devnet",
+      "ts": 1791511502782
+    },
+    {
+      "step": "Calculate entitlement: Investor C (domestic) (coupon)",
+      "sig": "4T3HXqQeknQFm7YK2dRnno9xHRzyXt74p3zQ6W1dj8KbuXEEH8FxpY7nvJqADLuNsaJs7xMNzw4uHbaFcTZpjNRZ",
+      "url": "https://explorer.solana.com/tx/4T3HXqQeknQFm7YK2dRnno9xHRzyXt74p3zQ6W1dj8KbuXEEH8FxpY7nvJqADLuNsaJs7xMNzw4uHbaFcTZpjNRZ?cluster=devnet",
+      "ts": 1791511503751
+    },
+    {
+      "step": "Fund coupon action",
+      "sig": "2LHUB6Ab9RYu4cPXKKNCDYcD7j4BKejVoqVk6NSMBXCbYvQ4NwZ63SVpPwKs3jme2JaCAsaAimRQ25HMU4hAh3Wc",
+      "url": "https://explorer.solana.com/tx/2LHUB6Ab9RYu4cPXKKNCDYcD7j4BKejVoqVk6NSMBXCbYvQ4NwZ63SVpPwKs3jme2JaCAsaAimRQ25HMU4hAh3Wc?cluster=devnet",
+      "ts": 1791511505349
+    },
+    {
+      "step": "Sweep withholding (coupon, SIMULATED tax authority)",
+      "sig": "3VYEhvM7TQAL7T5y77kRiNw9foHMkCADF2jxqD8N4nYnwDbFKm5W2qwJNVB7yyyvGQGHe25p2eP3PsoufMbo8sbL",
+      "url": "https://explorer.solana.com/tx/3VYEhvM7TQAL7T5y77kRiNw9foHMkCADF2jxqD8N4nYnwDbFKm5W2qwJNVB7yyyvGQGHe25p2eP3PsoufMbo8sbL?cluster=devnet",
+      "ts": 1791511506671
+    },
+    {
+      "step": "Claim coupon: Investor A (domestic)",
+      "sig": "3fBJtBudo73o4n9bCiuHSzMjpeEmpeddRdCfNR2JXkbgi54Y99WHJUw6d51U3pMX8xgrwZeqV12C1kDqDuiPCCHX",
+      "url": "https://explorer.solana.com/tx/3fBJtBudo73o4n9bCiuHSzMjpeEmpeddRdCfNR2JXkbgi54Y99WHJUw6d51U3pMX8xgrwZeqV12C1kDqDuiPCCHX?cluster=devnet",
+      "ts": 1791511507648
+    },
+    {
+      "step": "Claim coupon: Investor B (foreign)",
+      "sig": "3hwoM7JHXSCuWcUEk7sjT2K7rhUMp96hxsxSPga2ktGZXnw3W6bkAmR32mweVqV9MzgBfs6Q98H18FrS2zWbumMh",
+      "url": "https://explorer.solana.com/tx/3hwoM7JHXSCuWcUEk7sjT2K7rhUMp96hxsxSPga2ktGZXnw3W6bkAmR32mweVqV9MzgBfs6Q98H18FrS2zWbumMh?cluster=devnet",
+      "ts": 1791511508592
+    },
+    {
+      "step": "Claim coupon: Investor C (domestic)",
+      "sig": "3jPvp5B5b1VxZF85kBVk5Du4v9TJ8AjkZGAkYx6pVVPuShS3BrQsoFmtijwehUVuEVZiGgzkxLHicF5vugaCuH3a",
+      "url": "https://explorer.solana.com/tx/3jPvp5B5b1VxZF85kBVk5Du4v9TJ8AjkZGAkYx6pVVPuShS3BrQsoFmtijwehUVuEVZiGgzkxLHicF5vugaCuH3a?cluster=devnet",
+      "ts": 1791511509533
+    },
+    {
+      "step": "Create proposal",
+      "sig": "66kbZorNMKUaqirBnJbcmWGi8nx7dPkKrr3wn4fh71hnsHSBjCU5zntm1Rg9obshZ1SCCNu1eMnTJJCigraTytYQ",
+      "url": "https://explorer.solana.com/tx/66kbZorNMKUaqirBnJbcmWGi8nx7dPkKrr3wn4fh71hnsHSBjCU5zntm1Rg9obshZ1SCCNu1eMnTJJCigraTytYQ?cluster=devnet",
+      "ts": 1791511511256
+    },
+    {
+      "step": "Vote For: Investor A (domestic)",
+      "sig": "3yntqoiPFHnqPBbb8L3UQGrZC4M4wwvmkm98pMRH3dx6nACk3C3Xj59c37Mk7Yn6zGPpgJfXEbdgofptw3xD5W48",
+      "url": "https://explorer.solana.com/tx/3yntqoiPFHnqPBbb8L3UQGrZC4M4wwvmkm98pMRH3dx6nACk3C3Xj59c37Mk7Yn6zGPpgJfXEbdgofptw3xD5W48?cluster=devnet",
+      "ts": 1791511512367
+    },
+    {
+      "step": "Vote Against: Investor B (foreign)",
+      "sig": "47z6BQLrnJaYkQs35dzNreUYJRp8CxWWwktjt5mLL5T9RjAQHMwkRFz7t837Wg5rqkt8ADxLUjKtvnXTeXdZjCsR",
+      "url": "https://explorer.solana.com/tx/47z6BQLrnJaYkQs35dzNreUYJRp8CxWWwktjt5mLL5T9RjAQHMwkRFz7t837Wg5rqkt8ADxLUjKtvnXTeXdZjCsR?cluster=devnet",
+      "ts": 1791511513391
+    },
+    {
+      "step": "Vote For: Investor C (domestic)",
+      "sig": "4AZHHWEuH69f6bec21TtzfBgFo7iffkwny17Bm8tQVVrJg92Jb5kzrke2nFRWLfUcvFBeUA1DtppXQvVqUKxMbp4",
+      "url": "https://explorer.solana.com/tx/4AZHHWEuH69f6bec21TtzfBgFo7iffkwny17Bm8tQVVrJg92Jb5kzrke2nFRWLfUcvFBeUA1DtppXQvVqUKxMbp4?cluster=devnet",
+      "ts": 1791511514373
+    },
+    {
+      "step": "Finalize proposal",
+      "sig": "3VHKGA9UmyWxBs8qSdJ3Eonp1ckwtMewUAE7iBXFJQZnBwmNk8ih4btcwusduDN4Y8Rtyx524NBkekFii4cydYVE",
+      "url": "https://explorer.solana.com/tx/3VHKGA9UmyWxBs8qSdJ3Eonp1ckwtMewUAE7iBXFJQZnBwmNk8ih4btcwusduDN4Y8Rtyx524NBkekFii4cydYVE?cluster=devnet",
+      "ts": 1791511611375
+    },
+    {
+      "step": "Open record window 2",
+      "sig": "5WsDH3k8SbRDATVATNyKxawrKhA5Ta9uJ1uVyacAcBmFquEgbihfvV4obiGZizeRphcWGdzg1tGvqU2wYzLP5cLm",
+      "url": "https://explorer.solana.com/tx/5WsDH3k8SbRDATVATNyKxawrKhA5Ta9uJ1uVyacAcBmFquEgbihfvV4obiGZizeRphcWGdzg1tGvqU2wYzLP5cLm?cluster=devnet",
+      "ts": 1791511780746
+    },
+    {
+      "step": "Snapshot Investor A (domestic) (window 2)",
+      "sig": "237QKZcqwMwqqNCWbMiD4kzsaw1wfL6iBCMiWjZFhieapm4DayZeed2bvcnLTJ4jaawixER3kNUszeRc2tWomQjg",
+      "url": "https://explorer.solana.com/tx/237QKZcqwMwqqNCWbMiD4kzsaw1wfL6iBCMiWjZFhieapm4DayZeed2bvcnLTJ4jaawixER3kNUszeRc2tWomQjg?cluster=devnet",
+      "ts": 1791511782487
+    },
+    {
+      "step": "Snapshot Investor B (foreign) (window 2)",
+      "sig": "2eio3ZuBAjFUGUBzmuotDnPU21Hauqm73rvKJn4LLrBsm6R9gxZK6CXiR7Reng2ozVNGD2HroRVenoDn1V1PBuWx",
+      "url": "https://explorer.solana.com/tx/2eio3ZuBAjFUGUBzmuotDnPU21Hauqm73rvKJn4LLrBsm6R9gxZK6CXiR7Reng2ozVNGD2HroRVenoDn1V1PBuWx?cluster=devnet",
+      "ts": 1791511783515
+    },
+    {
+      "step": "Snapshot Investor C (domestic) (window 2)",
+      "sig": "4tfwDJNLykrz9o4VV67X6TMcNEthbt7CYMRt55riaDZbVwoGmRWrsGbCTYDBr51EFjt3RYNqPQZuDqmakLsEzkyU",
+      "url": "https://explorer.solana.com/tx/4tfwDJNLykrz9o4VV67X6TMcNEthbt7CYMRt55riaDZbVwoGmRWrsGbCTYDBr51EFjt3RYNqPQZuDqmakLsEzkyU?cluster=devnet",
+      "ts": 1791511784490
+    },
+    {
+      "step": "Close record window 2",
+      "sig": "3eEX9dnS2dfDkEGsw4UGxLUYtYhz9A8z27J1akaDYftm23448tmnYF635KyF2w2g3pbiQB87vPezfF7LQS5DFhhi",
+      "url": "https://explorer.solana.com/tx/3eEX9dnS2dfDkEGsw4UGxLUYtYhz9A8z27J1akaDYftm23448tmnYF635KyF2w2g3pbiQB87vPezfF7LQS5DFhhi?cluster=devnet",
+      "ts": 1791511785534
+    },
+    {
+      "step": "Create redemption action",
+      "sig": "2Lxe9naXqKGn6JXYsmdpSMjMFmGhck6JWDLa4kfDamGkDXGCEwf7pGpVUrbS1WaR3533trnUzz2AS7VApmkSnRCq",
+      "url": "https://explorer.solana.com/tx/2Lxe9naXqKGn6JXYsmdpSMjMFmGhck6JWDLa4kfDamGkDXGCEwf7pGpVUrbS1WaR3533trnUzz2AS7VApmkSnRCq?cluster=devnet",
+      "ts": 1791511787033
+    },
+    {
+      "step": "Calculate entitlement: Investor A (domestic) (redemption)",
+      "sig": "56kewywknFvfBc7XZpnTCsh9DtGHCabzD3q417gsxHgvHVfNgbi1eTyaAkJqghN1rjVCbb8jnThHizuHmdb1xZ3z",
+      "url": "https://explorer.solana.com/tx/56kewywknFvfBc7XZpnTCsh9DtGHCabzD3q417gsxHgvHVfNgbi1eTyaAkJqghN1rjVCbb8jnThHizuHmdb1xZ3z?cluster=devnet",
+      "ts": 1791511787935
+    },
+    {
+      "step": "Calculate entitlement: Investor B (foreign) (redemption)",
+      "sig": "5xFNMMLGRkwSZvEGKWWnY38aJUjZxurM1Fywu3V9NNfQiPjr7WQCav32NWW59BJVXiZDNqxktCT7hG44V53nwedh",
+      "url": "https://explorer.solana.com/tx/5xFNMMLGRkwSZvEGKWWnY38aJUjZxurM1Fywu3V9NNfQiPjr7WQCav32NWW59BJVXiZDNqxktCT7hG44V53nwedh?cluster=devnet",
+      "ts": 1791511788924
+    },
+    {
+      "step": "Calculate entitlement: Investor C (domestic) (redemption)",
+      "sig": "51QyKJFgbgPCrz9Wvm2LtFi8hbSmxFhBxDX4S3kVFpNnV3P5LWP6mpPtEkYNbHrEFt8kdesEYxD2JgVy492WbQer",
+      "url": "https://explorer.solana.com/tx/51QyKJFgbgPCrz9Wvm2LtFi8hbSmxFhBxDX4S3kVFpNnV3P5LWP6mpPtEkYNbHrEFt8kdesEYxD2JgVy492WbQer?cluster=devnet",
+      "ts": 1791511789828
+    },
+    {
+      "step": "Fund redemption action",
+      "sig": "4pufPxdM4QKa7Zj6KjCFrGFYyWHVTdybvbxE3LC1uCFNWiDkxKio18KB51rxGQK4NTSaH9KeTMWCTtq1HEPqULU6",
+      "url": "https://explorer.solana.com/tx/4pufPxdM4QKa7Zj6KjCFrGFYyWHVTdybvbxE3LC1uCFNWiDkxKio18KB51rxGQK4NTSaH9KeTMWCTtq1HEPqULU6?cluster=devnet",
+      "ts": 1791511790804
+    },
+    {
+      "step": "Sweep withholding (redemption, SIMULATED tax authority)",
+      "sig": "5vbg73cCxJyQWcRBpuWvwEhJ9VxixQWHYCw948vhiYgE3BSYTUURYGajWggpSnqRJvpgiqPwmm1LJ1QRMVSe6fqM",
+      "url": "https://explorer.solana.com/tx/5vbg73cCxJyQWcRBpuWvwEhJ9VxixQWHYCw948vhiYgE3BSYTUURYGajWggpSnqRJvpgiqPwmm1LJ1QRMVSe6fqM?cluster=devnet",
+      "ts": 1791511791792
+    },
+    {
+      "step": "Redeem: Investor A (domestic) (thaw + claim in one tx)",
+      "sig": "bK4XD3K9F1ERvXprYZ75X27qhjfJFeDsntgTfMAxXEngm8D5QvZgQhv2XJAATAbucvTTmPM88K88xktrZakgNmw",
+      "url": "https://explorer.solana.com/tx/bK4XD3K9F1ERvXprYZ75X27qhjfJFeDsntgTfMAxXEngm8D5QvZgQhv2XJAATAbucvTTmPM88K88xktrZakgNmw?cluster=devnet",
+      "ts": 1791511797154
+    },
+    {
+      "step": "Redeem: Investor B (foreign) (thaw + claim in one tx)",
+      "sig": "65jiATqJCSqQQCCExk7thjpoZaBsn47aKDY87hbJdxaNKRwyG6E31MW6Y59tEPxfFYFwir7gY6vgJ9AUdaYke3S4",
+      "url": "https://explorer.solana.com/tx/65jiATqJCSqQQCCExk7thjpoZaBsn47aKDY87hbJdxaNKRwyG6E31MW6Y59tEPxfFYFwir7gY6vgJ9AUdaYke3S4?cluster=devnet",
+      "ts": 1791511798673
+    },
+    {
+      "step": "Redeem: Investor C (domestic) (thaw + claim in one tx)",
+      "sig": "2imBjt2eNZh5mHpG4s55YKooUbCFvHh2p4MimBrHLgjbJuXwioTRkX345pYuBr78Aaw4QZcbGg1zEZBtr1ThYSnw",
+      "url": "https://explorer.solana.com/tx/2imBjt2eNZh5mHpG4s55YKooUbCFvHh2p4MimBrHLgjbJuXwioTRkX345pYuBr78Aaw4QZcbGg1zEZBtr1ThYSnw?cluster=devnet",
+      "ts": 1791511800097
+    },
+    {
+      "step": "Mark bond redeemed",
+      "sig": "2Zcm2oo8XpiYViDKHnUcuKxDBkJkh5rVXrgZ5QsrbsY3q1Z4Pa336HEqTf5yfMsm4S7SRWfzi7QTjW4sRNBrjM5j",
+      "url": "https://explorer.solana.com/tx/2Zcm2oo8XpiYViDKHnUcuKxDBkJkh5rVXrgZ5QsrbsY3q1Z4Pa336HEqTf5yfMsm4S7SRWfzi7QTjW4sRNBrjM5j?cluster=devnet",
+      "ts": 1791511801081
+    }
+  ]
+}

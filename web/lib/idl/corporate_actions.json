@@ -1,0 +1,1793 @@
+{
+  "address": "59hoGMNeum386CpHQpbsUStq51vfXS9iYxPkq5apthNg",
+  "metadata": {
+    "name": "corporate_actions",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "calculate_entitlement",
+      "discriminator": [
+        152,
+        27,
+        232,
+        92,
+        141,
+        177,
+        121,
+        0
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "action.epoch",
+                "account": "CorporateAction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder_record",
+          "docs": [
+            "bond-core holder registry record, carrying the snapshot balance."
+          ]
+        },
+        {
+          "name": "entitlement",
+          "docs": [
+            "One entitlement per (action, holder): a holder cannot be calculated twice."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "holder_record.wallet",
+                "account": "HolderRecord"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_coupon",
+      "discriminator": [
+        210,
+        153,
+        241,
+        46,
+        195,
+        18,
+        161,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "action.epoch",
+                "account": "CorporateAction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entitlement",
+          "docs": [
+            "Derived from the signer's own address: a holder can only claim their own."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "holder_payment_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_redemption",
+      "discriminator": [
+        109,
+        110,
+        9,
+        188,
+        195,
+        217,
+        112,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "signer": true
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "holder_record",
+          "docs": [
+            "bond-core registry record: binds the burn to the holder's registered bond account."
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "action.epoch",
+                "account": "CorporateAction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entitlement",
+          "docs": [
+            "Derived from the signer's own address: a holder can only claim their own."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "holder_payment_account",
+          "writable": true
+        },
+        {
+          "name": "bond_mint",
+          "writable": true
+        },
+        {
+          "name": "holder_bond_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_coupon_action",
+      "discriminator": [
+        61,
+        194,
+        199,
+        72,
+        189,
+        133,
+        142,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "ledger"
+          ]
+        },
+        {
+          "name": "ledger",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  100,
+                  103,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              }
+            ]
+          }
+        },
+        {
+          "name": "snapshot_record",
+          "docs": [
+            "The bond-core audit record of the record-date window for this epoch."
+          ]
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "arg",
+                "path": "epoch"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Holds the payment tokens for this action. Authority is the action PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "epoch",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "create_redemption_action",
+      "discriminator": [
+        46,
+        21,
+        93,
+        90,
+        63,
+        198,
+        237,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "ledger"
+          ]
+        },
+        {
+          "name": "ledger",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  100,
+                  103,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              }
+            ]
+          }
+        },
+        {
+          "name": "snapshot_record"
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "arg",
+                "path": "epoch"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "action"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "epoch",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "fund_action",
+      "discriminator": [
+        254,
+        42,
+        57,
+        244,
+        127,
+        99,
+        74,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "ledger",
+            "action"
+          ]
+        },
+        {
+          "name": "ledger",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  100,
+                  103,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              }
+            ]
+          }
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "action.epoch",
+                "account": "CorporateAction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "issuer_payment_account",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_ledger",
+      "discriminator": [
+        104,
+        2,
+        30,
+        235,
+        31,
+        207,
+        174,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond"
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "tax_collector",
+          "docs": [
+            "SIMULATED tax authority: any payment-token account chosen by the issuer.",
+            "It receives swept withholding. No real tax rail is integrated."
+          ]
+        },
+        {
+          "name": "ledger",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  100,
+                  103,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "total_coupons",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "sweep_withholding",
+      "discriminator": [
+        39,
+        245,
+        76,
+        178,
+        22,
+        232,
+        84,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "bond"
+          ]
+        },
+        {
+          "name": "bond",
+          "relations": [
+            "action"
+          ]
+        },
+        {
+          "name": "action",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "bond"
+              },
+              {
+                "kind": "account",
+                "path": "action.epoch",
+                "account": "CorporateAction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payment_mint"
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "tax_collector",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "BondLedger",
+      "discriminator": [
+        41,
+        28,
+        79,
+        33,
+        224,
+        24,
+        139,
+        43
+      ]
+    },
+    {
+      "name": "CorporateAction",
+      "discriminator": [
+        144,
+        225,
+        182,
+        199,
+        4,
+        234,
+        12,
+        32
+      ]
+    },
+    {
+      "name": "Entitlement",
+      "discriminator": [
+        220,
+        250,
+        27,
+        244,
+        55,
+        49,
+        74,
+        154
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "ActionCreated",
+      "discriminator": [
+        224,
+        166,
+        37,
+        66,
+        93,
+        1,
+        115,
+        234
+      ]
+    },
+    {
+      "name": "ActionFunded",
+      "discriminator": [
+        86,
+        14,
+        72,
+        100,
+        66,
+        157,
+        25,
+        135
+      ]
+    },
+    {
+      "name": "EntitlementCalculated",
+      "discriminator": [
+        108,
+        204,
+        34,
+        178,
+        193,
+        62,
+        100,
+        158
+      ]
+    },
+    {
+      "name": "EntitlementClaimed",
+      "discriminator": [
+        73,
+        203,
+        148,
+        64,
+        17,
+        226,
+        46,
+        58
+      ]
+    },
+    {
+      "name": "LedgerInitialized",
+      "discriminator": [
+        56,
+        38,
+        185,
+        200,
+        94,
+        92,
+        181,
+        202
+      ]
+    },
+    {
+      "name": "RedemptionClaimed",
+      "discriminator": [
+        107,
+        251,
+        199,
+        213,
+        59,
+        173,
+        53,
+        189
+      ]
+    },
+    {
+      "name": "WithholdingSwept",
+      "discriminator": [
+        242,
+        146,
+        28,
+        13,
+        134,
+        157,
+        109,
+        154
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Only the bond issuer can do this"
+    },
+    {
+      "code": 6001,
+      "name": "WrongBond",
+      "msg": "Account belongs to a different bond"
+    },
+    {
+      "code": 6002,
+      "name": "WrongMint",
+      "msg": "Wrong payment mint"
+    },
+    {
+      "code": 6003,
+      "name": "WrongTokenAccount",
+      "msg": "Wrong token account"
+    },
+    {
+      "code": 6004,
+      "name": "BondNotActive",
+      "msg": "Bond is not active"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTotalCoupons",
+      "msg": "total_coupons must be at least 1"
+    },
+    {
+      "code": 6006,
+      "name": "AllCouponsCreated",
+      "msg": "All coupon actions for this bond have already been created"
+    },
+    {
+      "code": 6007,
+      "name": "CouponsOutstanding",
+      "msg": "Coupons must be paid before redemption"
+    },
+    {
+      "code": 6008,
+      "name": "NotMatured",
+      "msg": "Bond has not reached maturity"
+    },
+    {
+      "code": 6009,
+      "name": "RedemptionAlreadyCreated",
+      "msg": "Redemption action already created for this bond"
+    },
+    {
+      "code": 6010,
+      "name": "SnapshotNotClosed",
+      "msg": "Record window for this epoch is not closed"
+    },
+    {
+      "code": 6011,
+      "name": "StaleSnapshot",
+      "msg": "Holder snapshot does not belong to this action's epoch"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidStatus",
+      "msg": "Action is not in the right status for this step"
+    },
+    {
+      "code": 6013,
+      "name": "WrongKind",
+      "msg": "Wrong action kind for this instruction"
+    },
+    {
+      "code": 6014,
+      "name": "CalculationIncomplete",
+      "msg": "Entitlements not yet calculated for every snapshotted holder"
+    },
+    {
+      "code": 6015,
+      "name": "WrongFundingAmount",
+      "msg": "Funding amount must equal the action's total gross"
+    },
+    {
+      "code": 6016,
+      "name": "NotFunded",
+      "msg": "Action has not been funded"
+    },
+    {
+      "code": 6017,
+      "name": "AlreadyClaimed",
+      "msg": "Entitlement already claimed"
+    },
+    {
+      "code": 6018,
+      "name": "AlreadySwept",
+      "msg": "Withholding already swept"
+    },
+    {
+      "code": 6019,
+      "name": "NothingToSweep",
+      "msg": "No withholding to sweep"
+    },
+    {
+      "code": 6020,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6021,
+      "name": "SnapshotBeforeMaturity",
+      "msg": "Redemption record window must open at or after maturity"
+    },
+    {
+      "code": 6022,
+      "name": "BondAccountFrozen",
+      "msg": "Thaw the holder's bond account first (bond-core thaw_holder)"
+    },
+    {
+      "code": 6023,
+      "name": "InsufficientBonds",
+      "msg": "Holder no longer holds the snapshot quantity of bonds"
+    }
+  ],
+  "types": [
+    {
+      "name": "ActionCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "ActionKind"
+              }
+            }
+          },
+          {
+            "name": "epoch",
+            "type": "u32"
+          },
+          {
+            "name": "action_index",
+            "type": "u16"
+          },
+          {
+            "name": "snapshot_holder_count",
+            "type": "u32"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActionFunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "entitlement_count",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActionKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Coupon"
+          },
+          {
+            "name": "Redemption"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActionStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Funded"
+          },
+          {
+            "name": "Closed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondLedger",
+      "docs": [
+        "One per bond. Set once by the issuer; caps how many coupon actions exist.",
+        "PDA: [\"ledger\", bond]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "tax_collector",
+            "docs": [
+              "SIMULATED tax authority: a payment-token account that receives swept",
+              "withholding. No real tax rail is integrated."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_coupons",
+            "docs": [
+              "Total coupons over the bond's life, INCLUDING the final coupon that is",
+              "paid together with redemption. Regular coupon actions are therefore",
+              "capped at total_coupons - 1."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "coupons_created",
+            "type": "u16"
+          },
+          {
+            "name": "coupons_paid",
+            "type": "u16"
+          },
+          {
+            "name": "redemption_created",
+            "type": "bool"
+          },
+          {
+            "name": "created_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bond_id",
+            "type": "u64"
+          },
+          {
+            "name": "bond_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "payment_mint",
+            "docs": [
+              "Test SPL token standing in for KZT/USDC (simulated fiat rail)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "face_value",
+            "type": "u64"
+          },
+          {
+            "name": "coupon_rate_bps",
+            "type": "u16"
+          },
+          {
+            "name": "coupons_per_year",
+            "type": "u8"
+          },
+          {
+            "name": "issue_ts",
+            "type": "i64"
+          },
+          {
+            "name": "maturity_ts",
+            "type": "i64"
+          },
+          {
+            "name": "max_supply",
+            "type": "u64"
+          },
+          {
+            "name": "minted_supply",
+            "type": "u64"
+          },
+          {
+            "name": "withholding_bps_domestic",
+            "type": "u16"
+          },
+          {
+            "name": "withholding_bps_foreign",
+            "type": "u16"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BondStatus"
+              }
+            }
+          },
+          {
+            "name": "record_epoch",
+            "type": "u32"
+          },
+          {
+            "name": "window_open",
+            "type": "bool"
+          },
+          {
+            "name": "record_slot",
+            "type": "u64"
+          },
+          {
+            "name": "snapshotted_supply",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Redeemed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CorporateAction",
+      "docs": [
+        "The persistent on-chain record of one corporate action.",
+        "One action per record window. PDA: [\"action\", bond, epoch]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "ActionKind"
+              }
+            }
+          },
+          {
+            "name": "epoch",
+            "docs": [
+              "Snapshot reference: the bond-core record-window epoch this action uses."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "action_index",
+            "docs": [
+              "Coupon number (1-based) for coupons; 0 for redemption."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "payment_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "docs": [
+              "Vault token account PDA: [\"vault\", action]"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "tax_collector",
+            "docs": [
+              "Copied from the ledger at creation (SIMULATED tax authority)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "ActionStatus"
+              }
+            }
+          },
+          {
+            "name": "snapshot_holder_count",
+            "docs": [
+              "Copied from the SnapshotRecord at creation; calculation must reach it."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "entitlement_count",
+            "type": "u32"
+          },
+          {
+            "name": "claimed_count",
+            "type": "u32"
+          },
+          {
+            "name": "total_gross",
+            "type": "u64"
+          },
+          {
+            "name": "total_withheld",
+            "type": "u64"
+          },
+          {
+            "name": "total_net",
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed_net",
+            "type": "u64"
+          },
+          {
+            "name": "funded_amount",
+            "type": "u64"
+          },
+          {
+            "name": "withheld_swept",
+            "type": "bool"
+          },
+          {
+            "name": "created_slot",
+            "type": "u64"
+          },
+          {
+            "name": "created_ts",
+            "type": "i64"
+          },
+          {
+            "name": "funded_ts",
+            "type": "i64"
+          },
+          {
+            "name": "closed_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Entitlement",
+      "docs": [
+        "What one holder is owed for one action. PDA: [\"entitlement\", action, wallet]",
+        "gross = principal + coupon_gross",
+        "withheld = withholding on coupon_gross ONLY (never on principal)",
+        "net = gross - withheld"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "jurisdiction",
+            "type": {
+              "defined": {
+                "name": "Jurisdiction"
+              }
+            }
+          },
+          {
+            "name": "quantity",
+            "docs": [
+              "Snapshot quantity copied at calculation time."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "coupon_gross",
+            "type": "u64"
+          },
+          {
+            "name": "gross",
+            "type": "u64"
+          },
+          {
+            "name": "withholding_bps",
+            "type": "u16"
+          },
+          {
+            "name": "withheld",
+            "type": "u64"
+          },
+          {
+            "name": "net",
+            "type": "u64"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "calculated_ts",
+            "type": "i64"
+          },
+          {
+            "name": "claimed_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EntitlementCalculated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "quantity",
+            "type": "u64"
+          },
+          {
+            "name": "gross",
+            "type": "u64"
+          },
+          {
+            "name": "withheld",
+            "type": "u64"
+          },
+          {
+            "name": "net",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EntitlementClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "net",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderRecord",
+      "docs": [
+        "Holder registry: one record per (bond, wallet)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "docs": [
+              "The one token account that holds this wallet's bonds for this bond."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "jurisdiction",
+            "type": {
+              "defined": {
+                "name": "Jurisdiction"
+              }
+            }
+          },
+          {
+            "name": "snapshot_balance",
+            "type": "u64"
+          },
+          {
+            "name": "snapshot_epoch",
+            "type": "u32"
+          },
+          {
+            "name": "snapshot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "registered_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Jurisdiction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Domestic"
+          },
+          {
+            "name": "Foreign"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LedgerInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_coupons",
+            "type": "u16"
+          },
+          {
+            "name": "tax_collector",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "quantity_burned",
+            "type": "u64"
+          },
+          {
+            "name": "principal",
+            "type": "u64"
+          },
+          {
+            "name": "coupon_gross",
+            "type": "u64"
+          },
+          {
+            "name": "withheld",
+            "type": "u64"
+          },
+          {
+            "name": "net",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SnapshotRecord",
+      "docs": [
+        "Persistent audit record of one record-date window (one per epoch)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bond",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch",
+            "type": "u32"
+          },
+          {
+            "name": "opened_slot",
+            "type": "u64"
+          },
+          {
+            "name": "opened_ts",
+            "type": "i64"
+          },
+          {
+            "name": "closed",
+            "type": "bool"
+          },
+          {
+            "name": "closed_slot",
+            "type": "u64"
+          },
+          {
+            "name": "closed_ts",
+            "type": "i64"
+          },
+          {
+            "name": "total_supply",
+            "type": "u64"
+          },
+          {
+            "name": "holder_count",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithholdingSwept",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "tax_collector",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}
