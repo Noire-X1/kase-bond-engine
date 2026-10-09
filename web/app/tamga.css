@@ -1,0 +1,68 @@
+@property --tg-p { syntax: "<percentage>"; initial-value: 0%; inherits: false; }
+
+.tg-hero, .tg-sec {
+  --tg-bg: #06140f; --tg-bg2: #0a1f17; --tg-ink: #e9efe6; --tg-mut: #8fa79b;
+  --tg-gold: #c9a44c; --tg-sky: #6cc4e8;
+  color: var(--tg-ink); position: relative;
+}
+.tg-hero h1, .tg-h2, .tg-card h3, .tg-stat { font-family: var(--tg-display, Georgia, serif); }
+
+.tg-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--tg-sky, #6cc4e8), #c9a44c); }
+
+.tg-hero { min-height: 100svh; display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 0%, #0e2d22 0%, var(--tg-bg) 70%); overflow: hidden; padding: 72px 24px 96px; }
+.tg-hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 30%), rgba(108,196,232,.16), transparent 62%); background-attachment: fixed; }
+.tg-hero-inner { position: relative; text-align: center; max-width: 760px; }
+.tg-hero-mark { color: var(--tg-gold); transform: translateY(calc(var(--sy, 0) * 0.18px)); filter: drop-shadow(0 0 24px rgba(201,164,76,.35)); }
+.tg-wordmark { font-size: clamp(3.6rem, 12vw, 7.5rem); line-height: 1; margin: 12px 0 8px; letter-spacing: .02em; font-weight: 600; }
+.tg-tagline { color: var(--tg-sky); font-size: clamp(1.1rem, 2.4vw, 1.5rem); margin: 0 0 18px; }
+.tg-sub { color: var(--tg-mut); line-height: 1.6; margin: 0 auto 28px; max-width: 620px; }
+.tg-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+.tg-btn { position: relative; overflow: hidden; display: inline-block; padding: 14px 28px; border-radius: 11px; color: #fff; text-decoration: none; font-weight: 600; border: 1px solid rgba(201,164,76,.6); background: radial-gradient(130% 170% at var(--tg-p) 130%, #1d7da0, #0b2f3d 55%, #06140f); transition: --tg-p .6s ease, transform .3s ease; }
+.tg-btn:hover { --tg-p: 100%; transform: translateY(-2px); }
+.tg-btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%); transform: translateX(-120%); }
+.tg-btn:hover::after { transform: translateX(120%); transition: transform .8s ease; }
+.tg-btn-ghost { background: transparent; color: var(--tg-gold); }
+
+.tg-counters { list-style: none; display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; padding: 0; margin: 44px 0 0; }
+.tg-counters li { display: grid; gap: 4px; }
+.tg-counters b { font-family: var(--tg-display, Georgia, serif); font-size: 2.4rem; color: var(--tg-gold); font-weight: 600; }
+.tg-counters span { color: var(--tg-mut); font-size: .85rem; max-width: 150px; }
+
+.tg-cue { position: absolute; bottom: 28px; left: 50%; margin-left: -13px; color: var(--tg-gold); animation: tg-bob 1.8s ease-in-out infinite; }
+@keyframes tg-bob { 0%,100% { transform: translateY(0); opacity: .6; } 50% { transform: translateY(10px); opacity: 1; } }
+
+.tg-sec { background: var(--tg-bg); padding: 0 24px 72px; }
+.tg-sec-alt { background: var(--tg-bg2); }
+.tg-ornament { display: block; color: var(--tg-gold); opacity: .55; margin-bottom: 56px; }
+.tg-wrap { max-width: 1040px; margin: 0 auto; }
+.tg-kicker { color: var(--tg-sky); text-transform: uppercase; letter-spacing: .18em; font-size: .78rem; margin: 0 0 10px; }
+.tg-h2 { font-size: clamp(1.8rem, 4.4vw, 3rem); line-height: 1.1; margin: 0 0 36px; font-weight: 600; }
+
+.tg-bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.b-wide { grid-column: span 4; } .b-narrow { grid-column: span 2; } .b-full { grid-column: span 6; }
+@media (max-width: 760px) { .b-wide, .b-narrow, .b-full { grid-column: span 6; } }
+
+.tg-card { position: relative; isolation: isolate; padding: 24px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.09); overflow: hidden; }
+.tg-card::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .3s; background: radial-gradient(320px circle at var(--cx, 50%) var(--cy, 50%), rgba(108,196,232,.18), transparent 65%); }
+.tg-card:hover::before { opacity: 1; }
+.tg-card:hover { border-color: rgba(201,164,76,.5); }
+.tg-card p { color: var(--tg-ink); line-height: 1.6; margin: 0; }
+.tg-card h3 { margin: 6px 0 8px; font-size: 1.5rem; color: var(--tg-gold); font-weight: 600; }
+.tg-card small { display: block; margin-top: 10px; color: var(--tg-mut); }
+.tg-stat { font-size: 3.4rem; color: var(--tg-gold); line-height: 1; margin-bottom: 8px; }
+.tg-stat i { font-style: normal; font-size: 2rem; margin-left: 2px; }
+.tg-step { color: var(--tg-sky); font-family: var(--tg-display, Georgia, serif); font-size: .95rem; letter-spacing: .1em; }
+.tg-note { color: var(--tg-mut); font-size: .85rem; line-height: 1.6; margin: 24px 0 40px; }
+
+.js-fx [data-reveal] { opacity: 0; transform: translateY(26px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: calc(var(--i, 0) * 90ms); }
+.js-fx [data-reveal].is-in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js-fx [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .tg-cue { animation: none; }
+  .tg-btn, .tg-btn::after { transition: none; }
+  .tg-hero-mark { transform: none; }
+}
+
+.tg-hero, .tg-sec { --tg-display: var(--font-display), Georgia, serif; }
