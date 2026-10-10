@@ -1,3 +1,5 @@
+import Veil from "@/components/Veil";
+import Verify from "@/components/Verify";
 import "./tamga.css";
 import Fx from "@/components/Fx";
 import { Hero, Problem, HowItWorks } from "@/components/Landing";
@@ -19,10 +21,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
-      <body><Fx />
+      <body><Veil />
+<Fx />
 <Hero />
 <Problem />
 <HowItWorks />
+<Verify />
 <div id="dashboard">{children}</div></body>
     </html>
   );

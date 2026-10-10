@@ -7,6 +7,7 @@ Tamga (technical name: *KASE Corporate Action Engine*) is the servicing layer fo
 Built for the Superteam Kazakhstan x KASE side track of the Colosseum Crypto World's Fair 2026 hackathon. A *tamga* is the steppe seal that marks ownership and authenticity.
 
 ![Tamga hero](docs/screenshots/hero.jpg)
+![Tamga dashboard](docs/screenshots/dashboard.jpg)
 
 ## What it does
 

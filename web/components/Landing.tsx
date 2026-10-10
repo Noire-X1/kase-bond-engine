@@ -6,6 +6,7 @@ const d = (i: number) => ({ "--i": i }) as CSSProperties;
 export function Hero() {
   return (
     <header className="tg-hero" id="top">
+      <div className="tg-lamp" aria-hidden="true"><i className="l" /><i className="r" /><i className="glow" /><i className="core" /><i className="bar" /></div>
       <div className="tg-hero-inner">
         <TamgaMark size={104} className="tg-hero-mark" />
         <h1 className="tg-wordmark">Tamga</h1>
