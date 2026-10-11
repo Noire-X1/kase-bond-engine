@@ -134,4 +134,4 @@ Token-2022 transfer hook so transfers to unregistered wallets are handled, Docke
 
 ## Disclaimer
 
-Hackathon prototype on devnet. Not audited, not financial or tax advice. No KASE or Superteam branding is used.
+Hackathon prototype on devnet. Not audited, not financial or tax advice.
